@@ -1010,6 +1010,90 @@ header h1 {
   padding: 10px 0 16px;
 }
 
+/* Overview entry point — pinned to the top of the sidebar, above the
+   scrollable class list. */
+.sidebar-overview-btn {
+  flex: 0 0 auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 8px 10px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: none;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.sidebar-overview-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.sidebar-overview-btn:hover {
+  color: var(--accent);
+}
+
+.sidebar-overview-btn.active {
+  color: var(--accent);
+}
+
+.class-sidebar.collapsed .sidebar-overview-btn {
+  padding: 16px 0 10px;
+}
+
+/* Overview page */
+.overview-page {
+  width: 100%;
+}
+
+.overview-semester-block {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.overview-semester-block:first-of-type {
+  margin-top: 16px;
+}
+
+.overview-semester-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 6px 4px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.overview-semester-header:hover {
+  background: var(--accent-bg);
+}
+
+.overview-semester-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.overview-semester-header:hover .overview-semester-name {
+  color: var(--accent);
+}
+
+.overview-semester-gpa {
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
 /* Settings page */
 .settings-main {
   width: 100%;

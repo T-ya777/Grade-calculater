@@ -8,6 +8,7 @@ import FinalExamCard from "./components/FinalExamCard";
 import ClassInfoCard from "./components/ClassInfoCard";
 import SettingsPage from "./components/SettingsPage";
 import SemesterPage from "./components/SemesterPage";
+import OverviewPage from "./components/OverviewPage";
 import { computeOverall } from "./utils/grading";
 import { exportExcelWorkbook } from "./utils/excelExport";
 import {
@@ -32,6 +33,7 @@ export default function App() {
   const [activeId, setActiveId] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [semesterView, setSemesterView] = useState(null);
+  const [overviewOpen, setOverviewOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     try {
@@ -162,26 +164,35 @@ export default function App() {
     setSemesters((prev) => prev.filter((s) => s !== name));
   }
 
-  // Selecting a class from the sidebar always leaves Settings/Semester view,
-  // so you land straight back on the class page instead of some other panel
-  // staying up.
+  // Selecting a class from the sidebar always leaves Settings/Semester/
+  // Overview, so you land straight back on the class page instead of some
+  // other panel staying up.
   function selectClass(id) {
     setSettingsOpen(false);
     setSemesterView(null);
+    setOverviewOpen(false);
     setActiveId(id);
   }
 
-  // No separate "back" button — clicking the gear again (or the same
+  // No separate "back" button — clicking the icon again (or the same
   // semester name again) closes that view and drops you back on whichever
   // class was active, same as clicking a class in the sidebar does.
   function openSettings() {
     setSemesterView(null);
+    setOverviewOpen(false);
     setSettingsOpen((prev) => !prev);
   }
 
   function openSemesterView(name) {
     setSettingsOpen(false);
+    setOverviewOpen(false);
     setSemesterView((prev) => (prev === name ? null : name));
+  }
+
+  function openOverview() {
+    setSettingsOpen(false);
+    setSemesterView(null);
+    setOverviewOpen((prev) => !prev);
   }
 
   function updateSettings(patch) {
@@ -253,6 +264,7 @@ export default function App() {
       setActiveId(data.profiles[0]?.id ?? null);
       setSettingsOpen(false);
       setSemesterView(null);
+      setOverviewOpen(false);
     };
     reader.onerror = () => alert("Couldn't read that file — try again.");
     reader.readAsText(file);
@@ -287,9 +299,10 @@ export default function App() {
     setActiveId(first.id);
     setSettingsOpen(false);
     setSemesterView(null);
+    setOverviewOpen(false);
   }
 
-  if (!loaded || !settings || (!active && !settingsOpen && !semesterView)) {
+  if (!loaded || !settings || (!active && !settingsOpen && !semesterView && !overviewOpen)) {
     return <div className="app-shell">Loading…</div>;
   }
 
@@ -340,10 +353,27 @@ export default function App() {
         onOpenSettings={openSettings}
         activeSemesterView={semesterView}
         onSelectSemester={openSemesterView}
+        overviewOpen={overviewOpen}
+        onOpenOverview={openOverview}
       />
 
       <div className="app-shell">
-        {settingsOpen ? (
+        {overviewOpen ? (
+          <>
+            <header>
+              <h1>Overview</h1>
+            </header>
+            <main className="settings-main">
+              <OverviewPage
+                profiles={profiles}
+                semesters={semesters}
+                settings={settings}
+                onSelectSemester={openSemesterView}
+                onSelectClass={selectClass}
+              />
+            </main>
+          </>
+        ) : settingsOpen ? (
           <>
             <header>
               <h1>Settings</h1>

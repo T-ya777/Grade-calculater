@@ -51,6 +51,29 @@ export function saveSemesters(semesters) {
 
 export const UNASSIGNED_SEMESTER = "Unassigned";
 
+/** Groups classes by semester: one group per explicit semester (in order),
+ * plus a trailing "Unassigned" group for anything that doesn't match.
+ * Empty groups are dropped. Shared by the Overview page and the Excel
+ * export so both use the same grouping logic. */
+export function groupProfilesBySemester(profiles, semesters) {
+  const bySemester = new Map(semesters.map((name) => [name, []]));
+  const leftovers = [];
+
+  profiles.forEach((p) => {
+    const key = p.semester && p.semester.trim() ? p.semester.trim() : "";
+    if (key && bySemester.has(key)) {
+      bySemester.get(key).push(p);
+    } else {
+      leftovers.push(p);
+    }
+  });
+
+  const groups = semesters.map((name) => ({ name, profiles: bySemester.get(name) || [] }));
+  if (leftovers.length > 0) groups.push({ name: UNASSIGNED_SEMESTER, profiles: leftovers });
+
+  return groups.filter((g) => g.profiles.length > 0);
+}
+
 export function newClassProfile(name = "New Class", scale = DEFAULT_SCALE) {
   return {
     id: uid(),

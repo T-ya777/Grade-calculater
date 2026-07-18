@@ -60,6 +60,8 @@ export default function ClassSidebar({
   onOpenSettings,
   activeSemesterView,
   onSelectSemester,
+  overviewOpen,
+  onOpenOverview,
 }) {
   const groups = buildGroups(profiles, semesters);
   const [expanded, setExpanded] = useState(loadExpanded);
@@ -143,6 +145,15 @@ export default function ClassSidebar({
 
   return (
     <aside className={`class-sidebar ${collapsed ? "collapsed" : ""}`}>
+      <button
+        className={`sidebar-overview-btn ${overviewOpen ? "active" : ""}`}
+        onClick={onOpenOverview}
+        title="Overview"
+      >
+        <span className="sidebar-overview-icon">▦</span>
+        {!collapsed && <span>Overview</span>}
+      </button>
+
       <div className="class-sidebar-scroll">
       <div className="class-sidebar-header">
         {!collapsed && <h2>Classes</h2>}

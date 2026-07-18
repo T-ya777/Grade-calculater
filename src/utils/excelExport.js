@@ -1,5 +1,5 @@
 import { computeOverall, computeSemesterGpa, letterForScore } from "./grading";
-import { UNASSIGNED_SEMESTER } from "./storage";
+import { groupProfilesBySemester } from "./storage";
 
 // Matches the sample workbook: blue bold header rows, plain Arial body,
 // light gray borders, italic gray notes.
@@ -43,22 +43,6 @@ function colLetter(n) {
   return s;
 }
 
-/** Same grouping the sidebar uses: one bucket per explicit semester (in
- * order), plus a trailing "Unassigned" bucket for anything that doesn't
- * match. Empty groups are dropped since there's nothing to show. */
-function groupBySemester(profiles, semesters) {
-  const bySemester = new Map(semesters.map((name) => [name, []]));
-  const leftovers = [];
-  profiles.forEach((p) => {
-    const key = p.semester && p.semester.trim() ? p.semester.trim() : "";
-    if (key && bySemester.has(key)) bySemester.get(key).push(p);
-    else leftovers.push(p);
-  });
-  const groups = semesters.map((name) => ({ name, profiles: bySemester.get(name) || [] }));
-  if (leftovers.length > 0) groups.push({ name: UNASSIGNED_SEMESTER, profiles: leftovers });
-  return groups.filter((g) => g.profiles.length > 0);
-}
-
 /** Excel sheet names: max 31 chars, no : \ / ? * [ ], and must be unique
  * within the workbook — two classes can share a name across semesters. */
 function sanitizeSheetName(name, used) {
@@ -83,7 +67,7 @@ function buildOverviewSheet(wb, profiles, semesters, settings) {
     ws.getColumn(i + 1).width = width;
   });
 
-  const groups = groupBySemester(profiles, semesters);
+  const groups = groupProfilesBySemester(profiles, semesters);
   let r = 1;
 
   groups.forEach((group) => {
