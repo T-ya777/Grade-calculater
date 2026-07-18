@@ -319,6 +319,19 @@ header h1 {
   width: 100%;
 }
 
+.scale-preset-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  margin: 10px 0;
+}
+
+.scale-preset-label select {
+  flex: 1;
+}
+
 .late-days-input {
   width: 100%;
   min-width: 48px;
@@ -407,7 +420,7 @@ header h1 {
 .class-sidebar {
   flex: 0 0 260px;
   min-height: 100vh;
-  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
   background: var(--card-bg);
   padding: 16px;
   position: sticky;
@@ -527,4 +540,25 @@ header h1 {
 
 .class-sidebar.collapsed .class-sidebar-add {
   padding: 6px;
+}
+
+.semester-group {
+  margin-bottom: 16px;
+}
+
+.semester-group-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 6px;
+  padding-left: 2px;
+}
+
+.class-sidebar-semester {
+  width: 100%;
+  font-size: 11px;
+  padding: 3px 6px;
+  color: var(--muted);
 }

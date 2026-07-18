@@ -23,10 +23,14 @@ export function newAssignment(name = "New Assignment") {
   return { id: uid(), name, earned: "", possible: "", lateDaysUsed: 0 };
 }
 
+export const UNASSIGNED_SEMESTER = "Unassigned";
+
 export function newClassProfile(name = "New Class") {
   return {
     id: uid(),
     name,
+    semester: "",
+    credits: 3,
     categories: [newCategory("Homework"), newCategory("Exams")],
     scale: DEFAULT_SCALE,
     latePolicy: "",

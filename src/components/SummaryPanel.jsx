@@ -1,4 +1,4 @@
-import { letterForScore } from "../utils/grading";
+import { letterForScore, SCALE_PRESETS } from "../utils/grading";
 
 export default function SummaryPanel({ overall, scale, onScaleChange }) {
   const { currentGrade, worstCaseGrade, rows, gradedWeightSum, totalWeight } = overall;
@@ -63,6 +63,30 @@ export default function SummaryPanel({ overall, scale, onScaleChange }) {
 
       <details className="scale-editor">
         <summary>Edit letter grade cutoffs</summary>
+
+        <label className="scale-preset-label">
+          Quick switch
+          <select
+            defaultValue=""
+            onChange={(e) => {
+              const key = e.target.value;
+              if (key && SCALE_PRESETS[key]) {
+                onScaleChange(SCALE_PRESETS[key].scale);
+              }
+              e.target.value = "";
+            }}
+          >
+            <option value="" disabled>
+              Choose a preset...
+            </option>
+            {Object.entries(SCALE_PRESETS).map(([key, preset]) => (
+              <option key={key} value={key}>
+                {preset.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
         <table className="scale-table">
           <thead>
             <tr>

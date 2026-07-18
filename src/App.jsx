@@ -87,6 +87,10 @@ export default function App() {
     setProfiles((prev) => prev.map((p) => (p.id === id ? { ...p, name } : p)));
   }
 
+  function setClassSemester(id, semester) {
+    setProfiles((prev) => prev.map((p) => (p.id === id ? { ...p, semester } : p)));
+  }
+
   function deleteClass(id) {
     const remaining = profiles.filter((p) => p.id !== id);
     setProfiles(remaining);
@@ -101,6 +105,19 @@ export default function App() {
 
   return (
     <div className="app-shell-outer">
+      <ClassSidebar
+        profiles={profiles}
+        grades={gradesByClass}
+        activeId={activeId}
+        collapsed={sidebarCollapsed}
+        onToggleCollapsed={() => setSidebarCollapsed((v) => !v)}
+        onSelect={setActiveId}
+        onCreate={createClass}
+        onRename={renameClass}
+        onSemesterChange={setClassSemester}
+        onDelete={deleteClass}
+      />
+
       <div className="app-shell">
         <header>
           <h1>Grade Calculator</h1>
@@ -152,18 +169,6 @@ export default function App() {
           </div>
         </main>
       </div>
-
-      <ClassSidebar
-        profiles={profiles}
-        grades={gradesByClass}
-        activeId={activeId}
-        collapsed={sidebarCollapsed}
-        onToggleCollapsed={() => setSidebarCollapsed((v) => !v)}
-        onSelect={setActiveId}
-        onCreate={createClass}
-        onRename={renameClass}
-        onDelete={deleteClass}
-      />
     </div>
   );
 }

@@ -78,20 +78,67 @@ export function computeOverall(categories) {
   };
 }
 
-export const DEFAULT_SCALE = [
-  { letter: "A", min: 93 },
-  { letter: "A-", min: 90 },
-  { letter: "B+", min: 87 },
-  { letter: "B", min: 83 },
-  { letter: "B-", min: 80 },
-  { letter: "C+", min: 77 },
-  { letter: "C", min: 73 },
-  { letter: "C-", min: 70 },
-  { letter: "D+", min: 67 },
-  { letter: "D", min: 63 },
-  { letter: "D-", min: 60 },
-  { letter: "F", min: 0 },
-];
+// Common cutoff presets. Schools/professors vary on whether they use
+// plus/minus grades at all, and if so whether they use both or just one.
+export const SCALE_PRESETS = {
+  standard: {
+    label: "Standard (plus and minus)",
+    scale: [
+      { letter: "A", min: 93 },
+      { letter: "A-", min: 90 },
+      { letter: "B+", min: 87 },
+      { letter: "B", min: 83 },
+      { letter: "B-", min: 80 },
+      { letter: "C+", min: 77 },
+      { letter: "C", min: 73 },
+      { letter: "C-", min: 70 },
+      { letter: "D+", min: 67 },
+      { letter: "D", min: 63 },
+      { letter: "D-", min: 60 },
+      { letter: "F", min: 0 },
+    ],
+  },
+  noPlusMinus: {
+    label: "No plus or minus",
+    scale: [
+      { letter: "A", min: 90 },
+      { letter: "B", min: 80 },
+      { letter: "C", min: 70 },
+      { letter: "D", min: 60 },
+      { letter: "F", min: 0 },
+    ],
+  },
+  plusOnly: {
+    label: "Plus only (no minus)",
+    scale: [
+      { letter: "A+", min: 97 },
+      { letter: "A", min: 93 },
+      { letter: "B+", min: 87 },
+      { letter: "B", min: 83 },
+      { letter: "C+", min: 77 },
+      { letter: "C", min: 73 },
+      { letter: "D+", min: 67 },
+      { letter: "D", min: 63 },
+      { letter: "F", min: 0 },
+    ],
+  },
+  minusOnly: {
+    label: "Minus only (no plus)",
+    scale: [
+      { letter: "A", min: 93 },
+      { letter: "A-", min: 90 },
+      { letter: "B", min: 83 },
+      { letter: "B-", min: 80 },
+      { letter: "C", min: 73 },
+      { letter: "C-", min: 70 },
+      { letter: "D", min: 63 },
+      { letter: "D-", min: 60 },
+      { letter: "F", min: 0 },
+    ],
+  },
+};
+
+export const DEFAULT_SCALE = SCALE_PRESETS.standard.scale;
 
 export function letterForScore(score, scale) {
   if (score === null || score === undefined || Number.isNaN(score)) return "—";
