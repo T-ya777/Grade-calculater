@@ -158,3 +158,35 @@ export function saveSettings(settings) {
     console.error("Failed to save settings", e);
   }
 }
+
+const WHATIF_OVERRIDES_KEY = "grade-calculator-whatif-overrides-v1";
+
+// What-If letter-grade overrides on the Semester page, kept per semester
+// name so trying out a hypothetical in one semester doesn't bleed into
+// another. Persisted so leaving and reopening What-If mode (or reloading
+// the app) shows the same hypothetical setup instead of losing it.
+export function loadWhatIfOverrides(semesterName) {
+  try {
+    const raw = localStorage.getItem(WHATIF_OVERRIDES_KEY);
+    const all = raw ? JSON.parse(raw) : {};
+    return all[semesterName] || {};
+  } catch (e) {
+    console.error("Failed to load What-If overrides", e);
+    return {};
+  }
+}
+
+export function saveWhatIfOverrides(semesterName, overrides) {
+  try {
+    const raw = localStorage.getItem(WHATIF_OVERRIDES_KEY);
+    const all = raw ? JSON.parse(raw) : {};
+    if (Object.keys(overrides).length === 0) {
+      delete all[semesterName];
+    } else {
+      all[semesterName] = overrides;
+    }
+    localStorage.setItem(WHATIF_OVERRIDES_KEY, JSON.stringify(all));
+  } catch (e) {
+    console.error("Failed to save What-If overrides", e);
+  }
+}
