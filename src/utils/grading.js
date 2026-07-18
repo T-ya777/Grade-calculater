@@ -136,6 +136,13 @@ export const SCALE_PRESETS = {
       { letter: "F", min: 0 },
     ],
   },
+  passNoPass: {
+    label: "Pass / No Pass",
+    scale: [
+      { letter: "P", min: 60 },
+      { letter: "NP", min: 0 },
+    ],
+  },
 };
 
 export const DEFAULT_SCALE = SCALE_PRESETS.standard.scale;
@@ -145,6 +152,26 @@ export function letterForScore(score, scale) {
   const sorted = [...scale].sort((a, b) => b.min - a.min);
   const found = sorted.find((s) => score >= s.min);
   return found ? found.letter : "—";
+}
+
+// Maps a letter grade to a color along a green -> yellow -> orange -> red
+// gradient, so the big circle gives an at-a-glance read on standing.
+// Works off the base letter (ignoring +/-), so it applies to any of the
+// cutoff presets automatically. Pass/No Pass map straight to green/red.
+const GRADE_COLORS = {
+  A: "#2e7d32", // green
+  B: "#c0ca33", // yellow-green
+  C: "#f9a825", // amber/yellow
+  D: "#ef6c00", // orange
+  F: "#c62828", // red
+  P: "#2e7d32", // green
+  NP: "#c62828", // red
+};
+
+export function colorForLetterGrade(letter) {
+  if (!letter || letter === "—") return null;
+  const base = letter.replace(/[+-]/g, "").trim().toUpperCase();
+  return GRADE_COLORS[base] || null;
 }
 
 /**

@@ -1,7 +1,19 @@
-import { letterForScore, SCALE_PRESETS } from "../utils/grading";
+import { letterForScore, colorForLetterGrade, SCALE_PRESETS } from "../utils/grading";
+
+// Adds an alpha channel to a "#rrggbb" color for the circle's background tint.
+function withAlpha(hex, alpha) {
+  const clean = hex.replace("#", "");
+  const num = parseInt(clean, 16);
+  const r = (num >> 16) & 255;
+  const g = (num >> 8) & 255;
+  const b = num & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 export default function SummaryPanel({ overall, scale, onScaleChange, credits, onCreditsChange }) {
   const { currentGrade, worstCaseGrade, rows, gradedWeightSum, totalWeight } = overall;
+  const letter = letterForScore(currentGrade, scale);
+  const gradeColor = colorForLetterGrade(letter);
 
   return (
     <div className="card summary-card">
@@ -20,8 +32,17 @@ export default function SummaryPanel({ overall, scale, onScaleChange, credits, o
       </div>
 
       <div className="summary-grade">
-        <div className="letter-circle">
-          <span className="letter-circle-letter">{letterForScore(currentGrade, scale)}</span>
+        <div
+          className="letter-circle"
+          style={
+            gradeColor
+              ? { borderColor: gradeColor, background: withAlpha(gradeColor, 0.14) }
+              : undefined
+          }
+        >
+          <span className="letter-circle-letter" style={gradeColor ? { color: gradeColor } : undefined}>
+            {letter}
+          </span>
           <span className="letter-circle-pct">
             {currentGrade === null ? "—" : `${currentGrade.toFixed(1)}%`}
           </span>
