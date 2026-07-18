@@ -6,12 +6,15 @@ import SummaryPanel from "./components/SummaryPanel";
 import LateDaysCard from "./components/LateDaysCard";
 import FinalExamCard from "./components/FinalExamCard";
 import ClassInfoCard from "./components/ClassInfoCard";
+import SettingsPage from "./components/SettingsPage";
 import { computeOverall } from "./utils/grading";
 import {
   loadProfiles,
   saveProfiles,
   loadSemesters,
   saveSemesters,
+  loadSettings,
+  saveSettings,
   newClassProfile,
   newCategory,
 } from "./utils/storage";
@@ -21,7 +24,9 @@ const SIDEBAR_COLLAPSED_KEY = "grade-calculator-sidebar-collapsed";
 export default function App() {
   const [profiles, setProfiles] = useState([]);
   const [semesters, setSemesters] = useState([]);
+  const [settings, setSettings] = useState(null);
   const [activeId, setActiveId] = useState(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     try {
@@ -35,6 +40,8 @@ export default function App() {
   useEffect(() => {
     const storedProfiles = loadProfiles();
     const storedSemesters = loadSemesters();
+    const storedSettings = loadSettings();
+    setSettings(storedSettings);
 
     if (storedProfiles.length > 0 || storedSemesters.length > 0) {
       setProfiles(storedProfiles);
@@ -45,7 +52,7 @@ export default function App() {
       // somewhere for a new class to belong, per-design no class exists
       // without a semester going forward.
       const semesterName = "Semester 1";
-      const first = newClassProfile("My Class");
+      const first = newClassProfile("My Class", storedSettings.defaultScale);
       first.semester = semesterName;
       setProfiles([first]);
       setSemesters([semesterName]);
@@ -54,7 +61,7 @@ export default function App() {
     setLoaded(true);
   }, []);
 
-  // Persist whenever profiles/semesters change (after initial load).
+  // Persist whenever profiles/semesters/settings change (after initial load).
   useEffect(() => {
     if (loaded) saveProfiles(profiles);
   }, [profiles, loaded]);
@@ -62,6 +69,10 @@ export default function App() {
   useEffect(() => {
     if (loaded) saveSemesters(semesters);
   }, [semesters, loaded]);
+
+  useEffect(() => {
+    if (loaded && settings) saveSettings(settings);
+  }, [settings, loaded]);
 
   useEffect(() => {
     try {
@@ -109,10 +120,10 @@ export default function App() {
   }
 
   function createClassInSemester(semesterName) {
-    const p = newClassProfile(`Class ${profiles.length + 1}`);
+    const p = newClassProfile(`Class ${profiles.length + 1}`, settings.defaultScale);
     p.semester = semesterName;
     setProfiles((prev) => [...prev, p]);
-    setActiveId(p.id);
+    selectClass(p.id);
   }
 
   function renameClass(id, name) {
@@ -146,11 +157,44 @@ export default function App() {
     setSemesters((prev) => prev.filter((s) => s !== name));
   }
 
-  if (!loaded || !active) {
+  // Selecting a class from the sidebar always leaves Settings, so you land
+  // straight back on the class page instead of the settings panel staying up.
+  function selectClass(id) {
+    setSettingsOpen(false);
+    setActiveId(id);
+  }
+
+  function updateSettings(patch) {
+    setSettings((prev) => ({ ...prev, ...patch }));
+  }
+
+  function applyScaleToAll(scale) {
+    setProfiles((prev) => prev.map((p) => ({ ...p, scale })));
+  }
+
+  if (!loaded || !settings || (!active && !settingsOpen)) {
     return <div className="app-shell">Loading…</div>;
   }
 
-  const overall = computeOverall(active.categories);
+  const overall = active ? computeOverall(active.categories) : null;
+
+  const cardRenderers = {
+    lateDays: () => (
+      <LateDaysCard
+        key="lateDays"
+        classProfile={active}
+        onTotalChange={(totalLateDays) => updateActive({ totalLateDays })}
+      />
+    ),
+    finalExam: () => (
+      <FinalExamCard
+        key="finalExam"
+        classProfile={active}
+        onNoFinalExamChange={(noFinalExam) => updateActive({ noFinalExam })}
+      />
+    ),
+    classInfo: () => <ClassInfoCard key="classInfo" classProfile={active} onChange={updateActive} />,
+  };
 
   return (
     <div className="app-shell-outer">
@@ -161,78 +205,95 @@ export default function App() {
         activeId={activeId}
         collapsed={sidebarCollapsed}
         onToggleCollapsed={() => setSidebarCollapsed((v) => !v)}
-        onSelect={setActiveId}
+        onSelect={selectClass}
         onRename={renameClass}
         onDelete={deleteClass}
         onAddSemester={addSemester}
         onRenameSemester={renameSemester}
         onDeleteSemester={deleteSemester}
         onCreateClassInSemester={createClassInSemester}
+        settingsOpen={settingsOpen}
+        onOpenSettings={() => setSettingsOpen(true)}
       />
 
       <div className="app-shell">
-        <header>
-          <h1>{active.name}</h1>
-          {semesters.length > 0 && (
-            <select
-              className="header-semester-select"
-              title="Semester"
-              value={semesters.includes(active.semester) ? active.semester : ""}
-              onChange={(e) => setClassSemester(active.id, e.target.value)}
-            >
-              {!semesters.includes(active.semester) && (
-                <option value="" disabled>
-                  Choose a semester...
-                </option>
+        {settingsOpen ? (
+          <>
+            <header>
+              <h1>Settings</h1>
+              <button className="header-back-btn" onClick={() => setSettingsOpen(false)}>
+                ← Back to classes
+              </button>
+            </header>
+            <main className="settings-main">
+              <SettingsPage
+                settings={settings}
+                onChange={updateSettings}
+                profileCount={profiles.length}
+                onApplyScaleToAll={applyScaleToAll}
+              />
+            </main>
+          </>
+        ) : (
+          <>
+            <header>
+              <h1>{active.name}</h1>
+              {semesters.length > 0 && (
+                <select
+                  className="header-semester-select"
+                  title="Semester"
+                  value={semesters.includes(active.semester) ? active.semester : ""}
+                  onChange={(e) => setClassSemester(active.id, e.target.value)}
+                >
+                  {!semesters.includes(active.semester) && (
+                    <option value="" disabled>
+                      Choose a semester...
+                    </option>
+                  )}
+                  {semesters.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
               )}
-              {semesters.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          )}
-        </header>
+            </header>
 
-        <main className="main-grid">
-          <div className="categories-column">
-            {active.categories.map((cat) => {
-              const row = overall.rows.find((r) => r.id === cat.id);
-              return (
-                <CategoryCard
-                  key={cat.id}
-                  category={cat}
-                  score={row?.score ?? null}
-                  contribution={row?.contribution ?? null}
-                  onChange={updateCategory}
-                  onDelete={() => deleteCategory(cat.id)}
+            <main className="main-grid">
+              <div className="categories-column">
+                {active.categories.map((cat) => {
+                  const row = overall.rows.find((r) => r.id === cat.id);
+                  return (
+                    <CategoryCard
+                      key={cat.id}
+                      category={cat}
+                      score={row?.score ?? null}
+                      contribution={row?.contribution ?? null}
+                      onChange={updateCategory}
+                      onDelete={() => deleteCategory(cat.id)}
+                    />
+                  );
+                })}
+                <button className="add-btn add-category-btn" onClick={addCategory}>
+                  + Add category
+                </button>
+              </div>
+
+              <div className="summary-column">
+                <SummaryPanel
+                  overall={overall}
+                  scale={active.scale}
+                  onScaleChange={(scale) => updateActive({ scale })}
+                  credits={active.credits}
+                  onCreditsChange={(credits) => updateActive({ credits })}
                 />
-              );
-            })}
-            <button className="add-btn add-category-btn" onClick={addCategory}>
-              + Add category
-            </button>
-          </div>
-
-          <div className="summary-column">
-            <SummaryPanel
-              overall={overall}
-              scale={active.scale}
-              onScaleChange={(scale) => updateActive({ scale })}
-              credits={active.credits}
-              onCreditsChange={(credits) => updateActive({ credits })}
-            />
-            <LateDaysCard
-              classProfile={active}
-              onTotalChange={(totalLateDays) => updateActive({ totalLateDays })}
-            />
-            <FinalExamCard
-              classProfile={active}
-              onNoFinalExamChange={(noFinalExam) => updateActive({ noFinalExam })}
-            />
-            <ClassInfoCard classProfile={active} onChange={updateActive} />
-          </div>
-        </main>
+                {settings.cardOrder
+                  .filter((key) => settings.cardVisibility[key] !== false && cardRenderers[key])
+                  .map((key) => cardRenderers[key]())}
+              </div>
+            </main>
+          </>
+        )}
       </div>
     </div>
   );

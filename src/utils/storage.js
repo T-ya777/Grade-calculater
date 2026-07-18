@@ -51,7 +51,7 @@ export function saveSemesters(semesters) {
 
 export const UNASSIGNED_SEMESTER = "Unassigned";
 
-export function newClassProfile(name = "New Class") {
+export function newClassProfile(name = "New Class", scale = DEFAULT_SCALE) {
   return {
     id: uid(),
     name,
@@ -62,7 +62,7 @@ export function newClassProfile(name = "New Class") {
       newCategory("Exams"),
       newCategory("Final Exam", { isFinalExam: true }),
     ],
-    scale: DEFAULT_SCALE,
+    scale,
     latePolicy: "",
     totalLateDays: 0,
     noFinalExam: false,
@@ -89,5 +89,46 @@ export function saveProfiles(profiles) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles));
   } catch (e) {
     console.error("Failed to save profiles", e);
+  }
+}
+
+const SETTINGS_KEY = "grade-calculator-settings-v1";
+
+// Cards that appear below the Summary card (which is always pinned first).
+// The order here is the default order for anyone with no saved preference yet.
+export const DEFAULT_CARD_ORDER = ["lateDays", "finalExam", "classInfo"];
+
+export function newSettings() {
+  return {
+    defaultScale: DEFAULT_SCALE,
+    cardOrder: [...DEFAULT_CARD_ORDER],
+    cardVisibility: { lateDays: true, finalExam: true, classInfo: true },
+  };
+}
+
+export function loadSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (!raw) return newSettings();
+    const parsed = JSON.parse(raw);
+    // Merge onto defaults so older saved settings still get any new fields
+    // added later (e.g. a card type introduced after someone already saved).
+    const defaults = newSettings();
+    return {
+      ...defaults,
+      ...parsed,
+      cardVisibility: { ...defaults.cardVisibility, ...(parsed.cardVisibility || {}) },
+    };
+  } catch (e) {
+    console.error("Failed to load settings", e);
+    return newSettings();
+  }
+}
+
+export function saveSettings(settings) {
+  try {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  } catch (e) {
+    console.error("Failed to save settings", e);
   }
 }

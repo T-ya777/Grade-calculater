@@ -56,12 +56,20 @@ export default function ClassSidebar({
   onRenameSemester,
   onDeleteSemester,
   onCreateClassInSemester,
+  settingsOpen,
+  onOpenSettings,
 }) {
   const groups = buildGroups(profiles, semesters);
   const [expanded, setExpanded] = useState(loadExpanded);
   const [editingSemester, setEditingSemester] = useState(null);
   const [addingSemester, setAddingSemester] = useState(false);
   const [newSemesterName, setNewSemesterName] = useState("");
+  const [editingClassId, setEditingClassId] = useState(null);
+
+  function commitRenameClass(id, value) {
+    if (value.trim()) onRename(id, value.trim());
+    setEditingClassId(null);
+  }
 
   // Always keep the semester containing the active class expanded, so
   // switching classes never hides the one you're looking at.
@@ -133,6 +141,7 @@ export default function ClassSidebar({
 
   return (
     <aside className={`class-sidebar ${collapsed ? "collapsed" : ""}`}>
+      <div className="class-sidebar-scroll">
       <div className="class-sidebar-header">
         {!collapsed && <h2>Classes</h2>}
         <button
@@ -237,12 +246,30 @@ export default function ClassSidebar({
                           onClick={() => onSelect(p.id)}
                         >
                           <div className="class-sidebar-item-main">
-                            <input
-                              className="class-sidebar-name"
-                              value={p.name}
-                              onClick={(e) => e.stopPropagation()}
-                              onChange={(e) => onRename(p.id, e.target.value)}
-                            />
+                            {editingClassId === p.id ? (
+                              <input
+                                autoFocus
+                                className="class-sidebar-name"
+                                defaultValue={p.name}
+                                onClick={(e) => e.stopPropagation()}
+                                onBlur={(e) => commitRenameClass(p.id, e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") e.target.blur();
+                                  if (e.key === "Escape") setEditingClassId(null);
+                                }}
+                              />
+                            ) : (
+                              <span
+                                className="class-sidebar-name class-sidebar-name-label"
+                                onDoubleClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingClassId(p.id);
+                                }}
+                                title="Double-click to rename"
+                              >
+                                {p.name}
+                              </span>
+                            )}
                             <button
                               className="icon-btn danger"
                               title="Delete class"
@@ -305,6 +332,16 @@ export default function ClassSidebar({
           +
         </button>
       )}
+      </div>
+
+      <button
+        className={`sidebar-settings-btn ${settingsOpen ? "active" : ""}`}
+        onClick={onOpenSettings}
+        title="Settings"
+      >
+        <span className="sidebar-settings-icon">⚙</span>
+        {!collapsed && <span>Settings</span>}
+      </button>
     </aside>
   );
 }

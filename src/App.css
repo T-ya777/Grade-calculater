@@ -587,10 +587,11 @@ header h1 {
 
 .class-sidebar {
   flex: 0 0 260px;
-  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
   border-right: 1px solid var(--border);
   background: var(--card-bg);
-  padding: 16px;
   position: sticky;
   top: 0;
   transition: flex-basis 0.15s ease;
@@ -598,7 +599,17 @@ header h1 {
 
 .class-sidebar.collapsed {
   flex-basis: 64px;
-  padding: 16px 8px;
+}
+
+.class-sidebar-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 16px 8px;
+}
+
+.class-sidebar.collapsed .class-sidebar-scroll {
+  padding: 16px 8px 8px;
 }
 
 .class-sidebar-header {
@@ -668,6 +679,14 @@ header h1 {
 
 .class-sidebar-name:focus {
   background: var(--card-bg);
+}
+
+.class-sidebar-name-label {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: default;
 }
 
 .class-sidebar-grade {
@@ -886,6 +905,163 @@ header h1 {
 .syllabus-upload:hover {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+/* Settings entry point — pinned to the bottom-left corner of the page,
+   outside the scrollable class list, so it never scrolls out of view. */
+.sidebar-settings-btn {
+  flex: 0 0 auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 8px 16px;
+  border: none;
+  border-top: 1px solid var(--border);
+  background: none;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.sidebar-settings-icon {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.sidebar-settings-btn:hover {
+  color: var(--accent);
+}
+
+.sidebar-settings-btn.active {
+  color: var(--accent);
+}
+
+.class-sidebar.collapsed .sidebar-settings-btn {
+  padding: 10px 0 16px;
+}
+
+/* Settings page */
+.header-back-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.header-back-btn:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.settings-main {
+  width: 100%;
+}
+
+.settings-page {
+  width: 100%;
+}
+
+.settings-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.settings-section:first-of-type {
+  margin-top: 12px;
+  padding-top: 0;
+  border-top: none;
+}
+
+.settings-section summary {
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-h);
+  margin-bottom: 4px;
+}
+
+.settings-section summary:hover {
+  color: var(--accent);
+}
+
+.settings-section[open] summary {
+  margin-bottom: 12px;
+}
+
+.settings-apply-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.card-order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.card-order-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--card-bg);
+  cursor: grab;
+}
+
+.card-order-row.pinned {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.card-order-row.dragging {
+  opacity: 0.4;
+  border-color: var(--accent);
+}
+
+.drag-handle {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.card-order-label {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.card-order-visible {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.settings-data-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.settings-data-buttons .add-btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.settings-data-buttons .add-btn.danger {
+  border-color: var(--danger);
+  color: var(--danger);
 }
 
 .syllabus-upload input {
