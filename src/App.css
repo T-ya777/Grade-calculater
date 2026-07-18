@@ -1,0 +1,280 @@
+.app-shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 20px 64px;
+}
+
+header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+header h1 {
+  font-size: 26px;
+}
+
+.class-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.class-rename {
+  min-width: 160px;
+}
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.category-name {
+  font-size: 17px;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  padding: 2px 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.category-name:focus {
+  background: var(--accent-bg);
+}
+
+.card-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+}
+
+.weight-input {
+  width: 56px;
+  margin: 0 4px;
+}
+
+.card-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.card-options label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.drop-input {
+  width: 48px;
+}
+
+.assignments-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8px;
+}
+
+.assignments-table th {
+  text-align: left;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+  padding: 4px 6px;
+}
+
+.assignments-table td {
+  padding: 4px 6px;
+}
+
+.assignments-table input {
+  width: 100%;
+}
+
+.score-input {
+  width: 100%;
+  min-width: 60px;
+}
+
+.pct-cell {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.add-btn {
+  background: none;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: var(--accent);
+  font-size: 13px;
+}
+
+.add-btn:hover {
+  background: var(--accent-bg);
+}
+
+.add-category-btn {
+  width: 100%;
+  padding: 10px;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  color: var(--danger);
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.icon-btn:hover {
+  background: rgba(214, 69, 69, 0.1);
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+  margin-top: 8px;
+}
+
+.card-footer strong {
+  color: var(--text-h);
+}
+
+.late-policy-label {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.late-policy-input {
+  width: 100%;
+  min-height: 80px;
+  resize: vertical;
+}
+
+.summary-card h2 {
+  margin-bottom: 12px;
+}
+
+.summary-grade {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.summary-label {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.summary-score {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.summary-score.muted {
+  color: var(--muted);
+  font-size: 22px;
+}
+
+.summary-score .letter {
+  font-size: 18px;
+  color: var(--accent);
+  margin-left: 6px;
+}
+
+.summary-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.breakdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.breakdown-table th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  padding: 6px 4px;
+}
+
+.breakdown-table td {
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.warning {
+  font-size: 13px;
+  color: #a15c00;
+  background: #fff3d9;
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.scale-editor summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--accent);
+  margin-top: 8px;
+}
+
+.scale-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+  font-size: 13px;
+}
+
+.scale-table input {
+  width: 100%;
+}
