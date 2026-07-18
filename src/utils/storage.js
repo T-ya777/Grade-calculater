@@ -25,6 +25,10 @@ export function newAssignment(name = "New Assignment") {
   return { id: uid(), name, earned: "", possible: "", lateDaysUsed: 0, extraCredit: false };
 }
 
+export function newWebsiteLink(label = "", url = "") {
+  return { id: uid(), label, url };
+}
+
 export const UNASSIGNED_SEMESTER = "Unassigned";
 
 export function newClassProfile(name = "New Class") {
@@ -42,6 +46,8 @@ export function newClassProfile(name = "New Class") {
     latePolicy: "",
     totalLateDays: 0,
     noFinalExam: false,
+    websiteLinks: [],
+    syllabus: null, // { name, type, size, dataUrl } once uploaded
   };
 }
 

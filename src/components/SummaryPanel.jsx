@@ -1,11 +1,23 @@
 import { letterForScore, SCALE_PRESETS } from "../utils/grading";
 
-export default function SummaryPanel({ overall, scale, onScaleChange }) {
+export default function SummaryPanel({ overall, scale, onScaleChange, credits, onCreditsChange }) {
   const { currentGrade, worstCaseGrade, rows, gradedWeightSum, totalWeight } = overall;
 
   return (
     <div className="card summary-card">
-      <h2>Summary</h2>
+      <div className="summary-card-header">
+        <h2>Summary</h2>
+        <label className="credits-badge" title="Credit hours for this class">
+          <input
+            type="number"
+            min="0"
+            step="0.5"
+            value={credits}
+            onChange={(e) => onCreditsChange(e.target.value === "" ? "" : Number(e.target.value))}
+          />
+          credits
+        </label>
+      </div>
 
       <div className="summary-grade">
         <div className="letter-circle">

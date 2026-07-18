@@ -211,6 +211,38 @@ header h1 {
   margin-bottom: 12px;
 }
 
+.summary-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.summary-card-header h2 {
+  margin-bottom: 0;
+}
+
+.credits-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--accent-bg);
+  border-radius: 999px;
+  padding: 4px 10px 4px 8px;
+}
+
+.credits-badge input {
+  width: 34px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-align: right;
+  color: var(--accent);
+  font-weight: 700;
+}
+
 .summary-grade {
   display: flex;
   gap: 20px;
@@ -634,6 +666,11 @@ header h1 {
   color: var(--accent);
 }
 
+.mini-credits {
+  margin-left: auto;
+  font-size: 11px;
+}
+
 .class-chip {
   width: 44px;
   height: 44px;
@@ -680,4 +717,116 @@ header h1 {
   font-size: 11px;
   padding: 3px 6px;
   color: var(--muted);
+}
+
+/* Class info card */
+
+.class-info-card h2 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.notes-label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.class-info-section {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.class-info-section-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-h);
+  margin-bottom: 8px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.muted.small {
+  font-size: 12px;
+}
+
+.website-link-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.website-link-label {
+  flex: 0 0 100px;
+  font-size: 13px;
+}
+
+.website-link-url {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+}
+
+.website-link-open {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 14px;
+  padding: 2px 4px;
+}
+
+.syllabus-upload {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 16px 10px;
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.syllabus-upload:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.syllabus-upload input {
+  display: none;
+}
+
+.syllabus-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.syllabus-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--accent);
+  text-decoration: none;
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.syllabus-name:hover {
+  text-decoration: underline;
 }

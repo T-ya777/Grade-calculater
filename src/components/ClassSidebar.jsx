@@ -100,6 +100,9 @@ export default function ClassSidebar({
                       <span className="mini-pct">
                         {grade === null || grade === undefined ? "no grades yet" : `${grade.toFixed(1)}%`}
                       </span>
+                      {p.credits !== undefined && p.credits !== "" && (
+                        <span className="mini-credits">{p.credits} cr</span>
+                      )}
                     </div>
                     <input
                       className="class-sidebar-semester"

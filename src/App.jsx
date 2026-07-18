@@ -5,6 +5,7 @@ import CategoryCard from "./components/CategoryCard";
 import SummaryPanel from "./components/SummaryPanel";
 import LateDaysCard from "./components/LateDaysCard";
 import FinalExamCard from "./components/FinalExamCard";
+import ClassInfoCard from "./components/ClassInfoCard";
 import { computeOverall } from "./utils/grading";
 import { loadProfiles, saveProfiles, newClassProfile, newCategory } from "./utils/storage";
 
@@ -145,19 +146,6 @@ export default function App() {
             <button className="add-btn add-category-btn" onClick={addCategory}>
               + Add category
             </button>
-
-            <div className="card">
-              <label className="late-policy-label" htmlFor="late-policy">
-                Notes / late policy
-              </label>
-              <textarea
-                id="late-policy"
-                className="late-policy-input"
-                placeholder="Paste the late policy or any grading notes here for reference..."
-                value={active.latePolicy || ""}
-                onChange={(e) => updateActive({ latePolicy: e.target.value })}
-              />
-            </div>
           </div>
 
           <div className="summary-column">
@@ -165,11 +153,14 @@ export default function App() {
               overall={overall}
               scale={active.scale}
               onScaleChange={(scale) => updateActive({ scale })}
+              credits={active.credits}
+              onCreditsChange={(credits) => updateActive({ credits })}
             />
             <FinalExamCard
               classProfile={active}
               onNoFinalExamChange={(noFinalExam) => updateActive({ noFinalExam })}
             />
+            <ClassInfoCard classProfile={active} onChange={updateActive} />
             <LateDaysCard
               classProfile={active}
               onTotalChange={(totalLateDays) => updateActive({ totalLateDays })}
