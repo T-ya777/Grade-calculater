@@ -35,6 +35,7 @@ export function newClassProfile(name = "New Class") {
     scale: DEFAULT_SCALE,
     latePolicy: "",
     totalLateDays: 0,
+    noFinalExam: false,
   };
 }
 

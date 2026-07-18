@@ -1,16 +1,51 @@
 import { useState } from "react";
 import { simulateCategoryScore, neededOnCategory } from "../utils/grading";
 
-export default function PlanAheadCard({ categories }) {
+function guessFinalCategory(options) {
+  return options.find((c) => /final/i.test(c.name)) || options[0];
+}
+
+export default function FinalExamCard({ classProfile, onNoFinalExamChange }) {
+  const categories = classProfile.categories || [];
   const options = categories.filter((c) => (Number(c.weight) || 0) > 0);
-  const [categoryId, setCategoryId] = useState(options[0]?.id || "");
+  const [categoryId, setCategoryId] = useState(() => guessFinalCategory(options)?.id || "");
   const [hypothetical, setHypothetical] = useState("");
   const [target, setTarget] = useState("");
 
+  const noFinalExam = !!classProfile.noFinalExam;
+
+  if (noFinalExam) {
+    return (
+      <div className="card final-exam-card no-final">
+        <div className="no-final-row">
+          <span>Final exam calculator</span>
+          <label className="no-final-toggle">
+            <input
+              type="checkbox"
+              checked={noFinalExam}
+              onChange={(e) => onNoFinalExamChange(e.target.checked)}
+            />
+            No final exam in this class
+          </label>
+        </div>
+      </div>
+    );
+  }
+
   if (options.length === 0) {
     return (
-      <div className="card plan-ahead-card">
-        <h2>Plan ahead</h2>
+      <div className="card final-exam-card">
+        <div className="final-exam-header">
+          <h2>Final exam calculator</h2>
+          <label className="no-final-toggle">
+            <input
+              type="checkbox"
+              checked={noFinalExam}
+              onChange={(e) => onNoFinalExamChange(e.target.checked)}
+            />
+            No final exam
+          </label>
+        </div>
         <p className="muted">Add a category with a weight to use this.</p>
       </div>
     );
@@ -29,11 +64,21 @@ export default function PlanAheadCard({ categories }) {
       : null;
 
   return (
-    <div className="card plan-ahead-card">
-      <h2>Plan ahead</h2>
+    <div className="card final-exam-card">
+      <div className="final-exam-header">
+        <h2>Final exam calculator</h2>
+        <label className="no-final-toggle">
+          <input
+            type="checkbox"
+            checked={noFinalExam}
+            onChange={(e) => onNoFinalExamChange(e.target.checked)}
+          />
+          No final exam
+        </label>
+      </div>
 
       <label className="plan-ahead-select">
-        Category
+        Which category is your final exam?
         <select value={category.id} onChange={(e) => setCategoryId(e.target.value)}>
           {options.map((c) => (
             <option key={c.id} value={c.id}>
@@ -53,7 +98,7 @@ export default function PlanAheadCard({ categories }) {
             value={hypothetical}
             onChange={(e) => setHypothetical(e.target.value)}
           />
-          % on {category.name}, my overall grade would be:
+          % on the final, my overall grade would be:
         </label>
         <div className="plan-ahead-result">
           {simulated === null ? "—" : `${simulated.toFixed(2)}%`}
@@ -70,7 +115,7 @@ export default function PlanAheadCard({ categories }) {
             value={target}
             onChange={(e) => setTarget(e.target.value)}
           />
-          % overall, I need this on {category.name}:
+          % overall, I need this on the final:
         </label>
         <div className="plan-ahead-result">
           {needed === null ? "—" : `${needed.toFixed(2)}%`}
@@ -78,7 +123,7 @@ export default function PlanAheadCard({ categories }) {
       </div>
 
       <p className="plan-ahead-note">
-        Both use full declared category weights; any other ungraded category counts as 0 for now.
+        Uses full declared category weights; any other ungraded category counts as 0 for now.
       </p>
     </div>
   );

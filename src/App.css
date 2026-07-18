@@ -345,11 +345,48 @@ header h1 {
   background: rgba(107, 77, 230, 0.04);
 }
 
-/* Plan ahead card */
+/* Plan ahead / final exam card */
 
-.plan-ahead-card h2 {
+.plan-ahead-card h2,
+.final-exam-card h2 {
   font-size: 18px;
   margin-bottom: 12px;
+}
+
+.final-exam-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.no-final-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.final-exam-card.no-final {
+  background: var(--bg);
+  border-style: dashed;
+  padding: 10px 18px;
+}
+
+.no-final-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.no-final-row .no-final-toggle {
+  color: var(--text-h);
 }
 
 .plan-ahead-select {

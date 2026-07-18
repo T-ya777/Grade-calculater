@@ -4,7 +4,7 @@ import ClassSidebar from "./components/ClassSidebar";
 import CategoryCard from "./components/CategoryCard";
 import SummaryPanel from "./components/SummaryPanel";
 import LateDaysCard from "./components/LateDaysCard";
-import PlanAheadCard from "./components/PlanAheadCard";
+import FinalExamCard from "./components/FinalExamCard";
 import { computeOverall } from "./utils/grading";
 import { loadProfiles, saveProfiles, newClassProfile, newCategory } from "./utils/storage";
 
@@ -163,7 +163,10 @@ export default function App() {
               scale={active.scale}
               onScaleChange={(scale) => updateActive({ scale })}
             />
-            <PlanAheadCard categories={active.categories} />
+            <FinalExamCard
+              classProfile={active}
+              onNoFinalExamChange={(noFinalExam) => updateActive({ noFinalExam })}
+            />
             <LateDaysCard
               classProfile={active}
               onTotalChange={(totalLateDays) => updateActive({ totalLateDays })}
