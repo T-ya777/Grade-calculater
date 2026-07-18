@@ -255,3 +255,76 @@ export function simulateCategoryScore(categories, targetCategoryId, hypothetical
 
   return contribution / totalWeight;
 }
+
+// Default grade-point table for GPA/QPA, the common US 4.0 scale with
+// +/-. Editable in Settings. Deliberately has no entry for "P"/"NP" so
+// Pass/No Pass classes are excluded from GPA/QPA by default — a class only
+// counts if its current letter grade resolves to a point value here.
+export const DEFAULT_GRADE_POINTS = [
+  { letter: "A+", points: 4.0 },
+  { letter: "A", points: 4.0 },
+  { letter: "A-", points: 3.7 },
+  { letter: "B+", points: 3.3 },
+  { letter: "B", points: 3.0 },
+  { letter: "B-", points: 2.7 },
+  { letter: "C+", points: 2.3 },
+  { letter: "C", points: 2.0 },
+  { letter: "C-", points: 1.7 },
+  { letter: "D+", points: 1.3 },
+  { letter: "D", points: 1.0 },
+  { letter: "D-", points: 0.7 },
+  { letter: "F", points: 0.0 },
+];
+
+/** Resolve a letter grade to a grade-point value using the editable
+ * gradePoints table. Tries an exact match first (so a custom table can
+ * assign "P" its own points), then falls back to the base letter with any
+ * +/- stripped. Returns null if there's no match — e.g. Pass/No Pass
+ * letters against the default table, or "—" for an ungraded class. */
+export function pointsForLetter(letter, gradePoints) {
+  if (!letter || letter === "—") return null;
+  const exact = gradePoints.find((g) => g.letter === letter);
+  if (exact) return exact.points;
+  const base = letter.replace(/[+-]/g, "").trim();
+  const baseMatch = gradePoints.find((g) => g.letter === base);
+  return baseMatch ? baseMatch.points : null;
+}
+
+/**
+ * GPA (simple average of grade points) and QPA (credit-weighted average)
+ * across a set of classes, typically all the classes in one semester.
+ * A class only counts if: it hasn't been explicitly excluded via
+ * `includeInGpa: false`, and its current letter grade resolves to a point
+ * value in `gradePoints` (so Pass/No Pass and ungraded classes are
+ * naturally excluded unless the table is customized to cover them).
+ */
+export function computeSemesterGpa(classProfiles, gradePoints) {
+  let simpleSum = 0;
+  let simpleCount = 0;
+  let creditSum = 0;
+  let creditWeightedSum = 0;
+
+  const rows = classProfiles.map((p) => {
+    const overall = computeOverall(p.categories);
+    const letter = letterForScore(overall.currentGrade, p.scale);
+    const excludedByChoice = p.includeInGpa === false;
+    const points = excludedByChoice ? null : pointsForLetter(letter, gradePoints);
+    const credits = Number(p.credits) || 0;
+    const included = points !== null;
+
+    if (included) {
+      simpleSum += points;
+      simpleCount += 1;
+      creditSum += credits;
+      creditWeightedSum += points * credits;
+    }
+
+    return { id: p.id, name: p.name, letter, points, credits, included };
+  });
+
+  return {
+    rows,
+    gpa: simpleCount > 0 ? simpleSum / simpleCount : null,
+    qpa: creditSum > 0 ? creditWeightedSum / creditSum : null,
+  };
+}

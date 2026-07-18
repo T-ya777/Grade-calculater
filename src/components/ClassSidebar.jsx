@@ -58,6 +58,8 @@ export default function ClassSidebar({
   onCreateClassInSemester,
   settingsOpen,
   onOpenSettings,
+  activeSemesterView,
+  onSelectSemester,
 }) {
   const groups = buildGroups(profiles, semesters);
   const [expanded, setExpanded] = useState(loadExpanded);
@@ -180,8 +182,10 @@ export default function ClassSidebar({
             const isOpen = expanded.has(group.key);
             const isEditing = editingSemester === group.key;
 
+            const isSemesterActive = activeSemesterView === group.key;
+
             return (
-              <div key={group.key} className="semester-group">
+              <div key={group.key} className={`semester-group ${isSemesterActive ? "active" : ""}`}>
                 <div className="semester-group-header">
                   <button className="semester-caret-btn" onClick={() => toggleSemester(group.key)}>
                     {isOpen ? "▾" : "▸"}
@@ -201,9 +205,11 @@ export default function ClassSidebar({
                   ) : (
                     <span
                       className="semester-group-label"
-                      onClick={() => toggleSemester(group.key)}
+                      onClick={() => onSelectSemester(group.key)}
                       onDoubleClick={() => group.managed && setEditingSemester(group.key)}
-                      title={group.managed ? "Double-click to rename" : undefined}
+                      title={
+                        group.managed ? "Click for GPA/QPA, double-click to rename" : "Click for GPA/QPA"
+                      }
                     >
                       {group.key}
                     </span>

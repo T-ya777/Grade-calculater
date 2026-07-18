@@ -1,4 +1,4 @@
-import { DEFAULT_SCALE } from "./grading";
+import { DEFAULT_SCALE, DEFAULT_GRADE_POINTS } from "./grading";
 
 const STORAGE_KEY = "grade-calculator-profiles-v1";
 const SEMESTERS_KEY = "grade-calculator-semesters-v1";
@@ -68,6 +68,7 @@ export function newClassProfile(name = "New Class", scale = DEFAULT_SCALE) {
     noFinalExam: false,
     websiteLinks: [],
     syllabus: null, // { name, type, size, dataUrl } once uploaded
+    includeInGpa: true, // toggled off automatically only when you choose to; see SummaryPanel
   };
 }
 
@@ -103,6 +104,8 @@ export function newSettings() {
     defaultScale: DEFAULT_SCALE,
     cardOrder: [...DEFAULT_CARD_ORDER],
     cardVisibility: { lateDays: true, finalExam: true, classInfo: true },
+    gpaDisplay: "both", // "both" | "gpa" | "qpa"
+    gradePoints: DEFAULT_GRADE_POINTS.map((g) => ({ ...g })),
   };
 }
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { SCALE_PRESETS } from "../utils/grading";
+import ApplyScaleModal from "./ApplyScaleModal";
 
 const CARD_LABELS = {
   lateDays: "Late Days",
@@ -7,8 +8,9 @@ const CARD_LABELS = {
   classInfo: "Class Info",
 };
 
-export default function SettingsPage({ settings, onChange, profileCount, onApplyScaleToAll }) {
+export default function SettingsPage({ settings, onChange, profiles, onApplyScaleToClasses }) {
   const [dragKey, setDragKey] = useState(null);
+  const [scaleModalOpen, setScaleModalOpen] = useState(false);
 
   function updateDefaultScale(scale) {
     onChange({ defaultScale: scale });
@@ -36,6 +38,10 @@ export default function SettingsPage({ settings, onChange, profileCount, onApply
     order.splice(to, 0, dragKey);
     onChange({ cardOrder: order });
     setDragKey(null);
+  }
+
+  function updateGradePoints(gradePoints) {
+    onChange({ gradePoints });
   }
 
   return (
@@ -126,22 +132,26 @@ export default function SettingsPage({ settings, onChange, profileCount, onApply
         <div className="settings-apply-row">
           <button
             className="add-btn"
-            disabled={profileCount === 0}
-            onClick={() => {
-              const label = `${profileCount} existing class${profileCount === 1 ? "" : "es"}`;
-              if (
-                window.confirm(
-                  `Apply this scale to all ${label}? This overwrites their current cutoff tables.`
-                )
-              ) {
-                onApplyScaleToAll(settings.defaultScale);
-              }
-            }}
+            disabled={profiles.length === 0}
+            onClick={() => setScaleModalOpen(true)}
           >
-            Apply to all {profileCount} existing class{profileCount === 1 ? "" : "es"}
+            Apply to existing classes...
           </button>
-          <span className="muted small">Only affects grade cutoffs — grades/categories are untouched.</span>
+          <span className="muted small">
+            Pick which classes get this scale, then confirm — nothing changes until you do.
+          </span>
         </div>
+
+        {scaleModalOpen && (
+          <ApplyScaleModal
+            profiles={profiles}
+            onCancel={() => setScaleModalOpen(false)}
+            onConfirm={(ids) => {
+              onApplyScaleToClasses(settings.defaultScale, ids);
+              setScaleModalOpen(false);
+            }}
+          />
+        )}
       </details>
 
       <details className="settings-section" open>
@@ -179,6 +189,79 @@ export default function SettingsPage({ settings, onChange, profileCount, onApply
             </div>
           ))}
         </div>
+      </details>
+
+      <details className="settings-section">
+        <summary>GPA / QPA</summary>
+        <p className="muted small">
+          Shown on each semester's page — click a semester name in the sidebar. Pass/No Pass and
+          ungraded classes are excluded automatically; click the mark next to any class there to
+          include or exclude it yourself.
+        </p>
+
+        <label className="scale-preset-label">
+          Show
+          <select
+            value={settings.gpaDisplay}
+            onChange={(e) => onChange({ gpaDisplay: e.target.value })}
+          >
+            <option value="both">Both GPA and QPA</option>
+            <option value="gpa">GPA only (simple average)</option>
+            <option value="qpa">QPA only (credit-weighted)</option>
+          </select>
+        </label>
+
+        <table className="scale-table">
+          <thead>
+            <tr>
+              <th>Letter</th>
+              <th>Points</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {settings.gradePoints.map((g, i) => (
+              <tr key={i}>
+                <td>
+                  <input
+                    value={g.letter}
+                    onChange={(e) => {
+                      const next = [...settings.gradePoints];
+                      next[i] = { ...next[i], letter: e.target.value };
+                      updateGradePoints(next);
+                    }}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={g.points}
+                    onChange={(e) => {
+                      const next = [...settings.gradePoints];
+                      next[i] = { ...next[i], points: Number(e.target.value) };
+                      updateGradePoints(next);
+                    }}
+                  />
+                </td>
+                <td>
+                  <button
+                    className="icon-btn danger"
+                    onClick={() => updateGradePoints(settings.gradePoints.filter((_, idx) => idx !== i))}
+                  >
+                    ✕
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <button
+          className="add-btn"
+          onClick={() => updateGradePoints([...settings.gradePoints, { letter: "New", points: 0 }])}
+        >
+          + Add row
+        </button>
       </details>
 
       <details className="settings-section">

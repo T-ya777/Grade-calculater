@@ -243,6 +243,63 @@ header h1 {
   font-weight: 700;
 }
 
+/* Semester GPA/QPA page */
+.semester-page {
+  width: 100%;
+}
+
+.semester-gpa-row {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin: 8px 0 16px;
+}
+
+.semester-gpa-block {
+  background: var(--accent-bg);
+  border-radius: 10px;
+  padding: 12px 20px;
+}
+
+.semester-row-clickable {
+  cursor: pointer;
+}
+
+.semester-row-clickable:hover {
+  background: var(--accent-bg);
+}
+
+.gpa-toggle {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.gpa-toggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.gpa-toggle.on {
+  background: rgba(46, 125, 50, 0.12);
+  border-color: #2e7d32;
+  color: #2e7d32;
+}
+
+.gpa-toggle.on:hover {
+  border-color: #2e7d32;
+  color: #2e7d32;
+}
+
 .summary-grade {
   display: flex;
   gap: 20px;
@@ -807,6 +864,18 @@ header h1 {
   padding: 0 4px;
 }
 
+.semester-group.active .semester-group-header {
+  background: var(--accent-bg);
+}
+
+.semester-group.active .semester-group-label {
+  color: var(--accent);
+}
+
+.semester-group-label:hover {
+  color: var(--accent);
+}
+
 .add-semester-row {
   margin-top: 4px;
 }
@@ -942,20 +1011,6 @@ header h1 {
 }
 
 /* Settings page */
-.header-back-btn {
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 6px 12px;
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.header-back-btn:hover {
-  background: var(--accent-bg);
-  color: var(--accent);
-}
-
 .settings-main {
   width: 100%;
 }
@@ -1062,6 +1117,93 @@ header h1 {
 .settings-data-buttons .add-btn.danger {
   border-color: var(--danger);
   color: var(--danger);
+}
+
+/* Apply-scale-to-existing-classes modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 20px;
+}
+
+.modal-box {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  width: 100%;
+  max-width: 420px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-box h3 {
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+
+.modal-select-all {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 14px 0 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-class-list {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.modal-class-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.add-btn.primary {
+  border-style: solid;
+  background: var(--accent);
+  color: #fff;
+}
+
+.add-btn.primary:hover {
+  opacity: 0.9;
+  background: var(--accent);
+}
+
+.add-btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.add-btn[disabled]:hover {
+  background: none;
+}
+
+.add-btn.primary[disabled]:hover {
+  background: var(--accent);
 }
 
 .syllabus-upload input {

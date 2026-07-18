@@ -7,6 +7,7 @@ import LateDaysCard from "./components/LateDaysCard";
 import FinalExamCard from "./components/FinalExamCard";
 import ClassInfoCard from "./components/ClassInfoCard";
 import SettingsPage from "./components/SettingsPage";
+import SemesterPage from "./components/SemesterPage";
 import { computeOverall } from "./utils/grading";
 import {
   loadProfiles,
@@ -17,6 +18,7 @@ import {
   saveSettings,
   newClassProfile,
   newCategory,
+  UNASSIGNED_SEMESTER,
 } from "./utils/storage";
 
 const SIDEBAR_COLLAPSED_KEY = "grade-calculator-sidebar-collapsed";
@@ -27,6 +29,7 @@ export default function App() {
   const [settings, setSettings] = useState(null);
   const [activeId, setActiveId] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [semesterView, setSemesterView] = useState(null);
   const [loaded, setLoaded] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     try {
@@ -157,24 +160,51 @@ export default function App() {
     setSemesters((prev) => prev.filter((s) => s !== name));
   }
 
-  // Selecting a class from the sidebar always leaves Settings, so you land
-  // straight back on the class page instead of the settings panel staying up.
+  // Selecting a class from the sidebar always leaves Settings/Semester view,
+  // so you land straight back on the class page instead of some other panel
+  // staying up.
   function selectClass(id) {
     setSettingsOpen(false);
+    setSemesterView(null);
     setActiveId(id);
+  }
+
+  // No separate "back" button — clicking the gear again (or the same
+  // semester name again) closes that view and drops you back on whichever
+  // class was active, same as clicking a class in the sidebar does.
+  function openSettings() {
+    setSemesterView(null);
+    setSettingsOpen((prev) => !prev);
+  }
+
+  function openSemesterView(name) {
+    setSettingsOpen(false);
+    setSemesterView((prev) => (prev === name ? null : name));
   }
 
   function updateSettings(patch) {
     setSettings((prev) => ({ ...prev, ...patch }));
   }
 
-  function applyScaleToAll(scale) {
-    setProfiles((prev) => prev.map((p) => ({ ...p, scale })));
+  function applyScaleToClasses(scale, ids) {
+    const idSet = new Set(ids);
+    setProfiles((prev) => prev.map((p) => (idSet.has(p.id) ? { ...p, scale } : p)));
   }
 
-  if (!loaded || !settings || (!active && !settingsOpen)) {
+  function toggleIncludeInGpa(id, next) {
+    setProfiles((prev) => prev.map((p) => (p.id === id ? { ...p, includeInGpa: next } : p)));
+  }
+
+  if (!loaded || !settings || (!active && !settingsOpen && !semesterView)) {
     return <div className="app-shell">Loading…</div>;
   }
+
+  const semesterProfiles = semesterView
+    ? profiles.filter((p) => {
+        const key = p.semester && p.semester.trim() ? p.semester.trim() : UNASSIGNED_SEMESTER;
+        return key === semesterView;
+      })
+    : [];
 
   const overall = active ? computeOverall(active.categories) : null;
 
@@ -213,7 +243,9 @@ export default function App() {
         onDeleteSemester={deleteSemester}
         onCreateClassInSemester={createClassInSemester}
         settingsOpen={settingsOpen}
-        onOpenSettings={() => setSettingsOpen(true)}
+        onOpenSettings={openSettings}
+        activeSemesterView={semesterView}
+        onSelectSemester={openSemesterView}
       />
 
       <div className="app-shell">
@@ -221,16 +253,28 @@ export default function App() {
           <>
             <header>
               <h1>Settings</h1>
-              <button className="header-back-btn" onClick={() => setSettingsOpen(false)}>
-                ← Back to classes
-              </button>
             </header>
             <main className="settings-main">
               <SettingsPage
                 settings={settings}
                 onChange={updateSettings}
-                profileCount={profiles.length}
-                onApplyScaleToAll={applyScaleToAll}
+                profiles={profiles}
+                onApplyScaleToClasses={applyScaleToClasses}
+              />
+            </main>
+          </>
+        ) : semesterView ? (
+          <>
+            <header>
+              <h1>{semesterView}</h1>
+            </header>
+            <main className="settings-main">
+              <SemesterPage
+                semesterName={semesterView}
+                profiles={semesterProfiles}
+                settings={settings}
+                onSelectClass={selectClass}
+                onToggleInclude={toggleIncludeInGpa}
               />
             </main>
           </>
