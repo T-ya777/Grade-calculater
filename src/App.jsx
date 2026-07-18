@@ -7,12 +7,20 @@ import LateDaysCard from "./components/LateDaysCard";
 import FinalExamCard from "./components/FinalExamCard";
 import ClassInfoCard from "./components/ClassInfoCard";
 import { computeOverall } from "./utils/grading";
-import { loadProfiles, saveProfiles, newClassProfile, newCategory } from "./utils/storage";
+import {
+  loadProfiles,
+  saveProfiles,
+  loadSemesters,
+  saveSemesters,
+  newClassProfile,
+  newCategory,
+} from "./utils/storage";
 
 const SIDEBAR_COLLAPSED_KEY = "grade-calculator-sidebar-collapsed";
 
 export default function App() {
   const [profiles, setProfiles] = useState([]);
+  const [semesters, setSemesters] = useState([]);
   const [activeId, setActiveId] = useState(null);
   const [loaded, setLoaded] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
@@ -25,22 +33,35 @@ export default function App() {
 
   // Load from localStorage once on mount.
   useEffect(() => {
-    const stored = loadProfiles();
-    if (stored.length > 0) {
-      setProfiles(stored);
-      setActiveId(stored[0].id);
+    const storedProfiles = loadProfiles();
+    const storedSemesters = loadSemesters();
+
+    if (storedProfiles.length > 0 || storedSemesters.length > 0) {
+      setProfiles(storedProfiles);
+      setSemesters(storedSemesters);
+      setActiveId(storedProfiles[0]?.id ?? null);
     } else {
+      // First run ever: seed one semester with one class so there's
+      // somewhere for a new class to belong, per-design no class exists
+      // without a semester going forward.
+      const semesterName = "Semester 1";
       const first = newClassProfile("My Class");
+      first.semester = semesterName;
       setProfiles([first]);
+      setSemesters([semesterName]);
       setActiveId(first.id);
     }
     setLoaded(true);
   }, []);
 
-  // Persist whenever profiles change (after initial load).
+  // Persist whenever profiles/semesters change (after initial load).
   useEffect(() => {
     if (loaded) saveProfiles(profiles);
   }, [profiles, loaded]);
+
+  useEffect(() => {
+    if (loaded) saveSemesters(semesters);
+  }, [semesters, loaded]);
 
   useEffect(() => {
     try {
@@ -87,8 +108,9 @@ export default function App() {
     updateActive({ categories: active.categories.filter((c) => c.id !== id) });
   }
 
-  function createClass() {
+  function createClassInSemester(semesterName) {
     const p = newClassProfile(`Class ${profiles.length + 1}`);
+    p.semester = semesterName;
     setProfiles((prev) => [...prev, p]);
     setActiveId(p.id);
   }
@@ -107,6 +129,23 @@ export default function App() {
     setActiveId(remaining.length > 0 ? remaining[0].id : null);
   }
 
+  function addSemester(name) {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setSemesters((prev) => (prev.includes(trimmed) ? prev : [...prev, trimmed]));
+  }
+
+  function renameSemester(oldName, newName) {
+    const trimmed = newName.trim();
+    if (!trimmed || trimmed === oldName) return;
+    setSemesters((prev) => prev.map((s) => (s === oldName ? trimmed : s)));
+    setProfiles((prev) => prev.map((p) => (p.semester === oldName ? { ...p, semester: trimmed } : p)));
+  }
+
+  function deleteSemester(name) {
+    setSemesters((prev) => prev.filter((s) => s !== name));
+  }
+
   if (!loaded || !active) {
     return <div className="app-shell">Loading…</div>;
   }
@@ -117,20 +156,42 @@ export default function App() {
     <div className="app-shell-outer">
       <ClassSidebar
         profiles={profiles}
+        semesters={semesters}
         grades={gradesByClass}
         activeId={activeId}
         collapsed={sidebarCollapsed}
         onToggleCollapsed={() => setSidebarCollapsed((v) => !v)}
         onSelect={setActiveId}
-        onCreate={createClass}
         onRename={renameClass}
-        onSemesterChange={setClassSemester}
         onDelete={deleteClass}
+        onAddSemester={addSemester}
+        onRenameSemester={renameSemester}
+        onDeleteSemester={deleteSemester}
+        onCreateClassInSemester={createClassInSemester}
       />
 
       <div className="app-shell">
         <header>
           <h1>{active.name}</h1>
+          {semesters.length > 0 && (
+            <select
+              className="header-semester-select"
+              title="Semester"
+              value={semesters.includes(active.semester) ? active.semester : ""}
+              onChange={(e) => setClassSemester(active.id, e.target.value)}
+            >
+              {!semesters.includes(active.semester) && (
+                <option value="" disabled>
+                  Choose a semester...
+                </option>
+              )}
+              {semesters.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          )}
         </header>
 
         <main className="main-grid">

@@ -375,13 +375,6 @@ header h1 {
   min-width: 48px;
 }
 
-.extra-credit-cell {
-  text-align: center;
-}
-
-.extra-credit-row {
-  background: rgba(107, 77, 230, 0.04);
-}
 
 /* Plan ahead / final exam card */
 
@@ -695,6 +688,15 @@ header h1 {
   font-size: 11px;
 }
 
+.semester-caret-label {
+  text-align: center;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
 .class-chip {
   width: 44px;
   height: 44px;
@@ -729,13 +731,10 @@ header h1 {
 .semester-group-header {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   width: 100%;
-  background: none;
-  border: none;
   padding: 4px 2px;
   margin-bottom: 4px;
-  cursor: pointer;
   border-radius: 6px;
 }
 
@@ -743,10 +742,14 @@ header h1 {
   background: var(--accent-bg);
 }
 
-.semester-caret {
+.semester-caret-btn {
+  background: none;
+  border: none;
   font-size: 10px;
   color: var(--muted);
-  width: 10px;
+  width: 16px;
+  padding: 0;
+  cursor: pointer;
 }
 
 .semester-group-label {
@@ -757,6 +760,19 @@ header h1 {
   font-weight: 600;
   flex: 1;
   text-align: left;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 2px;
+}
+
+.semester-name-input {
+  flex: 1;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  padding: 2px 4px;
 }
 
 .semester-count {
@@ -765,6 +781,20 @@ header h1 {
   background: var(--bg);
   border-radius: 999px;
   padding: 1px 6px;
+}
+
+.semester-group-header .icon-btn {
+  font-size: 12px;
+  padding: 0 4px;
+}
+
+.add-semester-row {
+  margin-top: 4px;
+}
+
+.add-semester-input {
+  width: 100%;
+  font-size: 13px;
 }
 
 .class-sidebar-semester {
@@ -792,6 +822,12 @@ header h1 {
   margin-top: 16px;
   padding-top: 12px;
   border-top: 1px solid var(--border);
+}
+
+.header-semester-select {
+  font-size: 13px;
+  color: var(--muted);
+  padding: 6px 10px;
 }
 
 .class-info-section-label {

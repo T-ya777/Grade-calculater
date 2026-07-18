@@ -82,7 +82,6 @@ export default function CategoryCard({ category, score, contribution, onChange, 
             <th>Possible</th>
             <th>%</th>
             <th title="Late days used on this assignment">Late days</th>
-            <th title="Bonus points that don't dilute the category average">Extra credit</th>
             <th></th>
           </tr>
         </thead>
@@ -93,7 +92,7 @@ export default function CategoryCard({ category, score, contribution, onChange, 
                 ? ((Number(a.earned) / Number(a.possible)) * 100).toFixed(1)
                 : "—";
             return (
-              <tr key={a.id} className={a.extraCredit ? "extra-credit-row" : ""}>
+              <tr key={a.id}>
                 <td>
                   <input
                     value={a.name}
@@ -126,13 +125,6 @@ export default function CategoryCard({ category, score, contribution, onChange, 
                     onChange={(e) =>
                       updateAssignment(a.id, { lateDaysUsed: Number(e.target.value) || 0 })
                     }
-                  />
-                </td>
-                <td className="extra-credit-cell">
-                  <input
-                    type="checkbox"
-                    checked={!!a.extraCredit}
-                    onChange={(e) => updateAssignment(a.id, { extraCredit: e.target.checked })}
                   />
                 </td>
                 <td>

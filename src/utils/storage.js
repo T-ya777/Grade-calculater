@@ -1,6 +1,7 @@
 import { DEFAULT_SCALE } from "./grading";
 
 const STORAGE_KEY = "grade-calculator-profiles-v1";
+const SEMESTERS_KEY = "grade-calculator-semesters-v1";
 
 let idCounter = 0;
 export function uid() {
@@ -22,11 +23,30 @@ export function newCategory(name = "New Category", opts = {}) {
 }
 
 export function newAssignment(name = "New Assignment") {
-  return { id: uid(), name, earned: "", possible: "", lateDaysUsed: 0, extraCredit: false };
+  return { id: uid(), name, earned: "", possible: "", lateDaysUsed: 0 };
 }
 
 export function newWebsiteLink(label = "", url = "") {
   return { id: uid(), label, url };
+}
+
+export function loadSemesters() {
+  try {
+    const raw = localStorage.getItem(SEMESTERS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.error("Failed to load semesters", e);
+    return [];
+  }
+}
+
+export function saveSemesters(semesters) {
+  try {
+    localStorage.setItem(SEMESTERS_KEY, JSON.stringify(semesters));
+  } catch (e) {
+    console.error("Failed to save semesters", e);
+  }
 }
 
 export const UNASSIGNED_SEMESTER = "Unassigned";
