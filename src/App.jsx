@@ -52,6 +52,11 @@ export default function App() {
 
   const active = profiles.find((p) => p.id === activeId);
 
+  // Keep the browser tab title in sync with whichever class is open.
+  useEffect(() => {
+    document.title = active ? `${active.name} — Grade Calculator` : "Grade Calculator";
+  }, [active?.name]);
+
   // Grade preview for every class, used by the sidebar so all classes are visible at once.
   const gradesByClass = useMemo(() => {
     const map = {};
@@ -125,7 +130,7 @@ export default function App() {
 
       <div className="app-shell">
         <header>
-          <h1>Grade Calculator</h1>
+          <h1>{active.name}</h1>
         </header>
 
         <main className="main-grid">
@@ -156,15 +161,15 @@ export default function App() {
               credits={active.credits}
               onCreditsChange={(credits) => updateActive({ credits })}
             />
+            <LateDaysCard
+              classProfile={active}
+              onTotalChange={(totalLateDays) => updateActive({ totalLateDays })}
+            />
             <FinalExamCard
               classProfile={active}
               onNoFinalExamChange={(noFinalExam) => updateActive({ noFinalExam })}
             />
             <ClassInfoCard classProfile={active} onChange={updateActive} />
-            <LateDaysCard
-              classProfile={active}
-              onTotalChange={(totalLateDays) => updateActive({ totalLateDays })}
-            />
           </div>
         </main>
       </div>

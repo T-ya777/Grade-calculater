@@ -433,6 +433,30 @@ header h1 {
   margin-bottom: 4px;
 }
 
+.late-days-card.minimized {
+  background: var(--bg);
+  border-style: dashed;
+  padding: 10px 18px;
+}
+
+.late-days-minimized-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.late-days-minimized-row .icon-btn {
+  margin-left: auto;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.late-days-minimized-row .icon-btn:hover {
+  background: var(--accent-bg);
+}
+
 .final-exam-subtitle strong {
   color: var(--text-h);
 }
