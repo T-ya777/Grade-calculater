@@ -8,25 +8,30 @@ export default function SummaryPanel({ overall, scale, onScaleChange }) {
       <h2>Summary</h2>
 
       <div className="summary-grade">
-        <div>
+        <div className="letter-circle">
+          <span className="letter-circle-letter">{letterForScore(currentGrade, scale)}</span>
+          <span className="letter-circle-pct">
+            {currentGrade === null ? "—" : `${currentGrade.toFixed(1)}%`}
+          </span>
+        </div>
+
+        <div className="summary-grade-details">
           <div className="summary-label">Current grade (based on entered work)</div>
-          <div className="summary-score">
-            {currentGrade === null ? "—" : `${currentGrade.toFixed(2)}%`}{" "}
-            <span className="letter">{letterForScore(currentGrade, scale)}</span>
-          </div>
           <div className="summary-sub">
             {gradedWeightSum.toFixed(1)}% of the {totalWeight.toFixed(1)}% weight has grades entered
           </div>
-        </div>
 
-        {totalWeight > gradedWeightSum && (
-          <div>
-            <div className="summary-label">Worst case if remaining work scores 0</div>
-            <div className="summary-score muted">
-              {worstCaseGrade === null ? "—" : `${worstCaseGrade.toFixed(2)}%`}
-            </div>
-          </div>
-        )}
+          {totalWeight > gradedWeightSum && (
+            <>
+              <div className="summary-label" style={{ marginTop: 10 }}>
+                Worst case if remaining work scores 0
+              </div>
+              <div className="summary-score muted">
+                {worstCaseGrade === null ? "—" : `${worstCaseGrade.toFixed(2)}%`}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       <table className="breakdown-table">

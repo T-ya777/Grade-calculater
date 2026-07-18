@@ -100,6 +100,40 @@ export function letterForScore(score, scale) {
   return found ? found.letter : "—";
 }
 
+/**
+ * Tally late-day usage across every category/assignment in a class.
+ * Returns total allowed, total used, remaining, and the list of assignments
+ * that used at least one late day (for the "which homeworks used a late day" view).
+ */
+export function computeLateDays(classProfile) {
+  const allowed = Number(classProfile.totalLateDays) || 0;
+  const usedList = [];
+
+  (classProfile.categories || []).forEach((cat) => {
+    (cat.assignments || []).forEach((a) => {
+      const days = Number(a.lateDaysUsed) || 0;
+      if (days > 0) {
+        usedList.push({
+          categoryId: cat.id,
+          categoryName: cat.name,
+          assignmentId: a.id,
+          assignmentName: a.name,
+          days,
+        });
+      }
+    });
+  });
+
+  const used = usedList.reduce((s, u) => s + u.days, 0);
+
+  return {
+    allowed,
+    used,
+    remaining: allowed - used,
+    usedList,
+  };
+}
+
 /** What score is needed on a remaining category to hit a target overall grade,
  * given all other categories' current scores and full declared weights. */
 export function neededOnCategory(categories, targetCategoryId, targetOverall) {

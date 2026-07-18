@@ -73,6 +73,7 @@ export default function CategoryCard({ category, score, contribution, onChange, 
             <th>Earned</th>
             <th>Possible</th>
             <th>%</th>
+            <th title="Late days used on this assignment">Late days</th>
             <th></th>
           </tr>
         </thead>
@@ -107,6 +108,17 @@ export default function CategoryCard({ category, score, contribution, onChange, 
                   />
                 </td>
                 <td className="pct-cell">{pct === "—" ? pct : `${pct}%`}</td>
+                <td>
+                  <input
+                    type="number"
+                    min="0"
+                    className="late-days-input"
+                    value={a.lateDaysUsed || 0}
+                    onChange={(e) =>
+                      updateAssignment(a.id, { lateDaysUsed: Number(e.target.value) || 0 })
+                    }
+                  />
+                </td>
                 <td>
                   <button className="icon-btn danger" onClick={() => removeAssignment(a.id)} title="Remove">
                     ✕

@@ -20,7 +20,7 @@ export function newCategory(name = "New Category") {
 }
 
 export function newAssignment(name = "New Assignment") {
-  return { id: uid(), name, earned: "", possible: "" };
+  return { id: uid(), name, earned: "", possible: "", lateDaysUsed: 0 };
 }
 
 export function newClassProfile(name = "New Class") {
@@ -30,6 +30,7 @@ export function newClassProfile(name = "New Class") {
     categories: [newCategory("Homework"), newCategory("Exams")],
     scale: DEFAULT_SCALE,
     latePolicy: "",
+    totalLateDays: 0,
   };
 }
 

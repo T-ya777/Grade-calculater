@@ -1,7 +1,15 @@
+.app-shell-outer {
+  display: flex;
+  align-items: flex-start;
+  min-height: 100vh;
+}
+
 .app-shell {
+  flex: 1;
   max-width: 1200px;
   margin: 0 auto;
   padding: 24px 20px 64px;
+  min-width: 0;
 }
 
 header {
@@ -199,9 +207,41 @@ header h1 {
 
 .summary-grade {
   display: flex;
-  gap: 24px;
+  gap: 20px;
+  align-items: center;
   flex-wrap: wrap;
   margin-bottom: 16px;
+}
+
+.letter-circle {
+  flex: 0 0 auto;
+  width: 108px;
+  height: 108px;
+  border-radius: 50%;
+  background: var(--accent-bg);
+  border: 3px solid var(--accent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.1;
+}
+
+.letter-circle-letter {
+  font-size: 38px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.letter-circle-pct {
+  font-size: 13px;
+  color: var(--text-h);
+  margin-top: 2px;
+}
+
+.summary-grade-details {
+  flex: 1;
+  min-width: 160px;
 }
 
 .summary-label {
@@ -277,4 +317,214 @@ header h1 {
 
 .scale-table input {
   width: 100%;
+}
+
+.late-days-input {
+  width: 100%;
+  min-width: 48px;
+}
+
+/* Late days card */
+
+.late-days-card h2 {
+  font-size: 18px;
+}
+
+.late-days-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.late-days-total {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.late-days-total input {
+  width: 56px;
+}
+
+.late-days-remaining {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--accent-bg);
+  margin-bottom: 10px;
+}
+
+.late-days-remaining.over {
+  background: rgba(214, 69, 69, 0.1);
+}
+
+.remaining-number {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.late-days-remaining.over .remaining-number {
+  color: var(--danger);
+}
+
+.remaining-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.late-days-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+}
+
+.late-days-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-top: 1px solid var(--border);
+}
+
+.days-badge {
+  background: var(--accent-bg);
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* Class sidebar */
+
+.class-sidebar {
+  flex: 0 0 260px;
+  min-height: 100vh;
+  border-left: 1px solid var(--border);
+  background: var(--card-bg);
+  padding: 16px;
+  position: sticky;
+  top: 0;
+  transition: flex-basis 0.15s ease;
+}
+
+.class-sidebar.collapsed {
+  flex-basis: 64px;
+  padding: 16px 8px;
+}
+
+.class-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.class-sidebar-header h2 {
+  font-size: 15px;
+}
+
+.sidebar-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  color: var(--muted);
+}
+
+.sidebar-toggle:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.class-sidebar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.class-sidebar-item {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.class-sidebar-item:hover {
+  border-color: var(--accent);
+}
+
+.class-sidebar-item.active {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.class-sidebar-item-main {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.class-sidebar-name {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 2px;
+}
+
+.class-sidebar-name:focus {
+  background: var(--card-bg);
+}
+
+.class-sidebar-grade {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.mini-letter {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.class-chip {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text-h);
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0 auto 8px;
+  display: block;
+}
+
+.class-chip.active {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.class-sidebar-add {
+  width: 100%;
+}
+
+.class-sidebar.collapsed .class-sidebar-add {
+  padding: 6px;
 }
