@@ -65,9 +65,12 @@ export default function App() {
   }
 
   function updateCategory(updatedCat) {
-    updateActive({
-      categories: active.categories.map((c) => (c.id === updatedCat.id ? updatedCat : c)),
+    // Only one category per class can be flagged as the final exam.
+    const categories = active.categories.map((c) => {
+      if (c.id === updatedCat.id) return updatedCat;
+      return updatedCat.isFinalExam ? { ...c, isFinalExam: false } : c;
     });
+    updateActive({ categories });
   }
 
   function addCategory() {

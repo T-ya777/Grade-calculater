@@ -1,18 +1,13 @@
 import { useState } from "react";
 import { simulateCategoryScore, neededOnCategory } from "../utils/grading";
 
-function guessFinalCategory(options) {
-  return options.find((c) => /final/i.test(c.name)) || options[0];
-}
-
 export default function FinalExamCard({ classProfile, onNoFinalExamChange }) {
   const categories = classProfile.categories || [];
-  const options = categories.filter((c) => (Number(c.weight) || 0) > 0);
-  const [categoryId, setCategoryId] = useState(() => guessFinalCategory(options)?.id || "");
   const [hypothetical, setHypothetical] = useState("");
   const [target, setTarget] = useState("");
 
   const noFinalExam = !!classProfile.noFinalExam;
+  const finalCategory = categories.find((c) => c.isFinalExam);
 
   if (noFinalExam) {
     return (
@@ -32,61 +27,50 @@ export default function FinalExamCard({ classProfile, onNoFinalExamChange }) {
     );
   }
 
-  if (options.length === 0) {
+  const header = (
+    <div className="final-exam-header">
+      <h2>Final exam calculator</h2>
+      <label className="no-final-toggle">
+        <input
+          type="checkbox"
+          checked={noFinalExam}
+          onChange={(e) => onNoFinalExamChange(e.target.checked)}
+        />
+        No final exam
+      </label>
+    </div>
+  );
+
+  if (!finalCategory) {
     return (
       <div className="card final-exam-card">
-        <div className="final-exam-header">
-          <h2>Final exam calculator</h2>
-          <label className="no-final-toggle">
-            <input
-              type="checkbox"
-              checked={noFinalExam}
-              onChange={(e) => onNoFinalExamChange(e.target.checked)}
-            />
-            No final exam
-          </label>
-        </div>
-        <p className="muted">Add a category with a weight to use this.</p>
+        {header}
+        <p className="muted">
+          Check "This is the final exam" on the category that represents your final exam to use
+          this calculator.
+        </p>
       </div>
     );
   }
 
-  const category = options.find((c) => c.id === categoryId) || options[0];
-
   const simulated =
     hypothetical !== "" && !Number.isNaN(Number(hypothetical))
-      ? simulateCategoryScore(categories, category.id, Number(hypothetical))
+      ? simulateCategoryScore(categories, finalCategory.id, Number(hypothetical))
       : null;
 
   const needed =
     target !== "" && !Number.isNaN(Number(target))
-      ? neededOnCategory(categories, category.id, Number(target))
+      ? neededOnCategory(categories, finalCategory.id, Number(target))
       : null;
 
   return (
     <div className="card final-exam-card">
-      <div className="final-exam-header">
-        <h2>Final exam calculator</h2>
-        <label className="no-final-toggle">
-          <input
-            type="checkbox"
-            checked={noFinalExam}
-            onChange={(e) => onNoFinalExamChange(e.target.checked)}
-          />
-          No final exam
-        </label>
-      </div>
+      {header}
 
-      <label className="plan-ahead-select">
-        Which category is your final exam?
-        <select value={category.id} onChange={(e) => setCategoryId(e.target.value)}>
-          {options.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </label>
+      <p className="final-exam-subtitle">
+        Using <strong>{finalCategory.name}</strong> ({finalCategory.weight}% of your grade) as the
+        final exam.
+      </p>
 
       <div className="plan-ahead-row">
         <label>

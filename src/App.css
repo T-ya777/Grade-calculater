@@ -100,6 +100,12 @@ header h1 {
   color: var(--muted);
 }
 
+.final-exam-flag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .card-options label {
   display: flex;
   align-items: center;
@@ -386,6 +392,16 @@ header h1 {
 }
 
 .no-final-row .no-final-toggle {
+  color: var(--text-h);
+}
+
+.final-exam-subtitle {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.final-exam-subtitle strong {
   color: var(--text-h);
 }
 

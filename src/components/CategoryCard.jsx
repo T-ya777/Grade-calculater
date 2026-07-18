@@ -64,6 +64,14 @@ export default function CategoryCard({ category, score, contribution, onChange, 
             onChange={(e) => update({ dropLowest: Number(e.target.value) || 0 })}
           />
         </label>
+        <label className="final-exam-flag" title="Marks this as the final exam category used by the Final Exam Calculator">
+          <input
+            type="checkbox"
+            checked={!!category.isFinalExam}
+            onChange={(e) => update({ isFinalExam: e.target.checked })}
+          />
+          This is the final exam
+        </label>
       </div>
 
       <table className="assignments-table">

@@ -8,7 +8,7 @@ export function uid() {
   return `${Date.now().toString(36)}-${idCounter}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
-export function newCategory(name = "New Category") {
+export function newCategory(name = "New Category", opts = {}) {
   return {
     id: uid(),
     name,
@@ -16,6 +16,8 @@ export function newCategory(name = "New Category") {
     mode: "avgPercent", // or "sumPoints"
     dropLowest: 0,
     assignments: [],
+    isFinalExam: false,
+    ...opts,
   };
 }
 
@@ -31,7 +33,11 @@ export function newClassProfile(name = "New Class") {
     name,
     semester: "",
     credits: 3,
-    categories: [newCategory("Homework"), newCategory("Exams")],
+    categories: [
+      newCategory("Homework"),
+      newCategory("Exams"),
+      newCategory("Final Exam", { isFinalExam: true }),
+    ],
     scale: DEFAULT_SCALE,
     latePolicy: "",
     totalLateDays: 0,
