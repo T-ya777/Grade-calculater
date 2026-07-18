@@ -7,8 +7,6 @@ export default function SemesterPage({ semesterName, profiles, settings, onSelec
 
   return (
     <div className="card semester-page">
-      <h2>{semesterName}</h2>
-
       {rows.length === 0 ? (
         <p className="muted small">No classes in this semester yet.</p>
       ) : (

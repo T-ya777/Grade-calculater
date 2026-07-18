@@ -1119,6 +1119,16 @@ header h1 {
   color: var(--danger);
 }
 
+.settings-import-label {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.settings-import-label input {
+  display: none;
+}
+
 /* Apply-scale-to-existing-classes modal */
 .modal-overlay {
   position: fixed;

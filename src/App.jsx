@@ -16,6 +16,7 @@ import {
   saveSemesters,
   loadSettings,
   saveSettings,
+  newSettings,
   newClassProfile,
   newCategory,
   UNASSIGNED_SEMESTER,
@@ -195,6 +196,86 @@ export default function App() {
     setProfiles((prev) => prev.map((p) => (p.id === id ? { ...p, includeInGpa: next } : p)));
   }
 
+  // Everything lives only in localStorage, so this is the only way to back
+  // it up or move it to a different browser/computer. One JSON file with
+  // everything the app knows — not meant to be hand-edited, just a save
+  // file to download and load back in later.
+  function exportAllData() {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      profiles,
+      semesters,
+      settings,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const dateStr = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `grade-calculator-backup-${dateStr}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  }
+
+  // Import always replaces everything currently in the app — simplest
+  // mental model for "restore a backup." Merging with existing data is
+  // logged as a future idea, not built here.
+  function importAllData(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      let data;
+      try {
+        data = JSON.parse(reader.result);
+      } catch {
+        alert("Couldn't read that file — make sure it's a Grade Calculator backup (.json).");
+        return;
+      }
+
+      if (!Array.isArray(data.profiles) || !Array.isArray(data.semesters) || typeof data.settings !== "object") {
+        alert("That file doesn't look like a Grade Calculator backup — import cancelled.");
+        return;
+      }
+
+      const count = data.profiles.length;
+      const when = data.exportedAt ? new Date(data.exportedAt).toLocaleString() : "an unknown date";
+      const proceed = window.confirm(
+        `This will replace everything currently in the app with this backup ` +
+          `(${count} class${count === 1 ? "" : "es"}, exported ${when}). This can't be undone. Continue?`
+      );
+      if (!proceed) return;
+
+      setProfiles(data.profiles);
+      setSemesters(data.semesters);
+      setSettings({ ...newSettings(), ...data.settings });
+      setActiveId(data.profiles[0]?.id ?? null);
+      setSettingsOpen(false);
+      setSemesterView(null);
+    };
+    reader.onerror = () => alert("Couldn't read that file — try again.");
+    reader.readAsText(file);
+  }
+
+  function clearAllData() {
+    const proceed = window.confirm(
+      "This permanently deletes every class, semester, and setting in this browser. " +
+        "If you haven't exported a backup yet, cancel and do that first — this can't be undone. Continue?"
+    );
+    if (!proceed) return;
+
+    const freshSettings = newSettings();
+    const semesterName = "Semester 1";
+    const first = newClassProfile("My Class", freshSettings.defaultScale);
+    first.semester = semesterName;
+    setSettings(freshSettings);
+    setProfiles([first]);
+    setSemesters([semesterName]);
+    setActiveId(first.id);
+    setSettingsOpen(false);
+    setSemesterView(null);
+  }
+
   if (!loaded || !settings || (!active && !settingsOpen && !semesterView)) {
     return <div className="app-shell">Loading…</div>;
   }
@@ -260,6 +341,9 @@ export default function App() {
                 onChange={updateSettings}
                 profiles={profiles}
                 onApplyScaleToClasses={applyScaleToClasses}
+                onExportData={exportAllData}
+                onImportData={importAllData}
+                onClearAllData={clearAllData}
               />
             </main>
           </>

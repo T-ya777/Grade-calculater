@@ -8,7 +8,15 @@ const CARD_LABELS = {
   classInfo: "Class Info",
 };
 
-export default function SettingsPage({ settings, onChange, profiles, onApplyScaleToClasses }) {
+export default function SettingsPage({
+  settings,
+  onChange,
+  profiles,
+  onApplyScaleToClasses,
+  onExportData,
+  onImportData,
+  onClearAllData,
+}) {
   const [dragKey, setDragKey] = useState(null);
   const [scaleModalOpen, setScaleModalOpen] = useState(false);
 
@@ -46,9 +54,7 @@ export default function SettingsPage({ settings, onChange, profiles, onApplyScal
 
   return (
     <div className="card settings-page">
-      <h2>Settings</h2>
-
-      <details className="settings-section" open>
+      <details className="settings-section">
         <summary>Default grade scale</summary>
         <p className="muted small">
           New classes start with this scale. It won't touch classes you already have unless you
@@ -154,7 +160,7 @@ export default function SettingsPage({ settings, onChange, profiles, onApplyScal
         )}
       </details>
 
-      <details className="settings-section" open>
+      <details className="settings-section">
         <summary>Card layout</summary>
         <p className="muted small">
           Drag to reorder, uncheck to hide. Summary always stays first. Changes apply to every
@@ -267,20 +273,32 @@ export default function SettingsPage({ settings, onChange, profiles, onApplyScal
       <details className="settings-section">
         <summary>Data management</summary>
         <p className="muted small">
-          Coming soon — export a backup file, import one elsewhere, or clear everything and start
-          fresh. Everything currently lives only in this browser's storage.
+          Everything lives only in this browser's storage. Export a backup file every so often so
+          you don't lose it if you clear your browser or switch computers.
         </p>
         <div className="settings-data-buttons">
-          <button className="add-btn" disabled title="Coming soon">
-            Export all data
+          <button className="add-btn" onClick={onExportData}>
+            Export backup
           </button>
-          <button className="add-btn" disabled title="Coming soon">
-            Import data
-          </button>
-          <button className="add-btn danger" disabled title="Coming soon">
+          <label className="add-btn settings-import-label">
+            Import backup
+            <input
+              type="file"
+              accept=".json,application/json"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                if (file) onImportData(file);
+              }}
+            />
+          </label>
+          <button className="add-btn danger" onClick={onClearAllData}>
             Clear all data
           </button>
         </div>
+        <p className="muted small" style={{ marginTop: 8 }}>
+          Importing replaces everything currently in the app with the backup's contents.
+        </p>
       </details>
     </div>
   );
