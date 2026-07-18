@@ -337,6 +337,72 @@ header h1 {
   min-width: 48px;
 }
 
+.extra-credit-cell {
+  text-align: center;
+}
+
+.extra-credit-row {
+  background: rgba(107, 77, 230, 0.04);
+}
+
+/* Plan ahead card */
+
+.plan-ahead-card h2 {
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
+.plan-ahead-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.plan-ahead-select select {
+  flex: 1;
+}
+
+.plan-ahead-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.plan-ahead-row label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+  flex: 1;
+  min-width: 200px;
+}
+
+.plan-ahead-input {
+  width: 64px;
+}
+
+.plan-ahead-result {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.plan-ahead-note {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 10px;
+}
+
 /* Late days card */
 
 .late-days-card h2 {

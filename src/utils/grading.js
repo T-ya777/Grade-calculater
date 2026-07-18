@@ -6,35 +6,64 @@
  *  - "avgPercent": average each assignment's percentage (typical "average of homework" rule)
  *  - "sumPoints": sum(earned) / sum(possible) * 100 (typical for exams/points-based grading)
  * dropLowest: number of lowest-scoring assignments to drop before computing.
+ *
+ * Assignments flagged extraCredit are treated as bonus: they add to the
+ * score but don't dilute the average/denominator the way a normal
+ * assignment would. That means extra credit can push a category above 100%.
  */
 export function computeCategoryScore(category) {
-  const valid = (category.assignments || []).filter(
-    (a) => a.possible !== "" && a.possible !== null && Number(a.possible) > 0 && a.earned !== "" && a.earned !== null
-  );
+  const isValid = (a) =>
+    a.possible !== "" && a.possible !== null && Number(a.possible) > 0 && a.earned !== "" && a.earned !== null;
 
-  if (valid.length === 0) return null;
+  const all = (category.assignments || []).filter(isValid);
+  const normal = all.filter((a) => !a.extraCredit);
+  const extra = all.filter((a) => a.extraCredit);
 
-  const withPct = valid.map((a) => ({
+  if (normal.length === 0 && extra.length === 0) return null;
+
+  const withPct = normal.map((a) => ({
     ...a,
     pct: (Number(a.earned) / Number(a.possible)) * 100,
   }));
 
   withPct.sort((a, b) => a.pct - b.pct);
 
-  const dropCount = Math.min(category.dropLowest || 0, withPct.length - 1);
+  const dropCount = Math.min(category.dropLowest || 0, Math.max(withPct.length - 1, 0));
   const kept = withPct.slice(dropCount);
 
-  if (kept.length === 0) return null;
+  let base = null;
+  let earnedSum = 0;
+  let possibleSum = 0;
 
-  if (category.mode === "sumPoints") {
-    const earnedSum = kept.reduce((s, a) => s + Number(a.earned), 0);
-    const possibleSum = kept.reduce((s, a) => s + Number(a.possible), 0);
-    return possibleSum > 0 ? (earnedSum / possibleSum) * 100 : null;
+  if (kept.length > 0) {
+    if (category.mode === "sumPoints") {
+      earnedSum = kept.reduce((s, a) => s + Number(a.earned), 0);
+      possibleSum = kept.reduce((s, a) => s + Number(a.possible), 0);
+      base = possibleSum > 0 ? (earnedSum / possibleSum) * 100 : null;
+    } else {
+      // default: avgPercent
+      const sum = kept.reduce((s, a) => s + a.pct, 0);
+      base = sum / kept.length;
+    }
   }
 
-  // default: avgPercent
-  const sum = kept.reduce((s, a) => s + a.pct, 0);
-  return sum / kept.length;
+  if (extra.length === 0) return base;
+
+  // Extra credit bonus, expressed in percentage points.
+  let bonus;
+  if (category.mode === "sumPoints" && possibleSum > 0) {
+    // Same denominator as the base calc, so bonus points are true bonus points.
+    const extraEarned = extra.reduce((s, a) => s + Number(a.earned), 0);
+    bonus = (extraEarned / possibleSum) * 100;
+  } else {
+    // avgPercent (or sumPoints with no normal assignments yet): each extra
+    // credit item contributes its own percentage, scaled as if it were one
+    // more item in the average, without growing the divisor.
+    const divisor = Math.max(kept.length, 1);
+    bonus = extra.reduce((s, a) => s + (Number(a.earned) / Number(a.possible)) * 100, 0) / divisor;
+  }
+
+  return (base ?? 0) + bonus;
 }
 
 /**
@@ -200,4 +229,31 @@ export function neededOnCategory(categories, targetCategoryId, targetOverall) {
   // targetOverall = (knownContribution + x * target.weight) / totalWeight
   const needed = (targetOverall * totalWeight - knownContribution) / target.weight;
   return needed;
+}
+
+/**
+ * "What-if" forward simulation: if a chosen category ended up scoring
+ * `hypotheticalScore`, what would the overall grade be? Other categories
+ * keep their current score (or 0 if ungraded), using full declared weights
+ * — the same convention as computeOverall's worstCaseGrade.
+ */
+export function simulateCategoryScore(categories, targetCategoryId, hypotheticalScore) {
+  const rows = categories.map((cat) => ({
+    id: cat.id,
+    weight: Number(cat.weight) || 0,
+    score: computeCategoryScore(cat),
+  }));
+
+  const target = rows.find((r) => r.id === targetCategoryId);
+  if (!target) return null;
+
+  const totalWeight = rows.reduce((s, r) => s + r.weight, 0);
+  if (totalWeight <= 0) return null;
+
+  const contribution = rows.reduce((s, r) => {
+    const score = r.id === targetCategoryId ? hypotheticalScore : r.score || 0;
+    return s + score * r.weight;
+  }, 0);
+
+  return contribution / totalWeight;
 }

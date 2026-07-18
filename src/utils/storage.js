@@ -20,7 +20,7 @@ export function newCategory(name = "New Category") {
 }
 
 export function newAssignment(name = "New Assignment") {
-  return { id: uid(), name, earned: "", possible: "", lateDaysUsed: 0 };
+  return { id: uid(), name, earned: "", possible: "", lateDaysUsed: 0, extraCredit: false };
 }
 
 export const UNASSIGNED_SEMESTER = "Unassigned";
