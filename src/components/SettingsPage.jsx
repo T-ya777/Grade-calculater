@@ -16,6 +16,7 @@ export default function SettingsPage({
   onExportData,
   onImportData,
   onClearAllData,
+  onExportExcel,
 }) {
   const [dragKey, setDragKey] = useState(null);
   const [scaleModalOpen, setScaleModalOpen] = useState(false);
@@ -280,6 +281,9 @@ export default function SettingsPage({
           <button className="add-btn" onClick={onExportData}>
             Export backup
           </button>
+          <button className="add-btn" onClick={onExportExcel}>
+            Export Excel
+          </button>
           <label className="add-btn settings-import-label">
             Import backup
             <input
@@ -297,7 +301,9 @@ export default function SettingsPage({
           </button>
         </div>
         <p className="muted small" style={{ marginTop: 8 }}>
-          Importing replaces everything currently in the app with the backup's contents.
+          "Export backup" is the file to import from — it's the only one that restores
+          everything exactly. "Export Excel" is a readable spreadsheet snapshot (an Overview
+          sheet plus one sheet per class) for viewing outside the app; it can't be imported yet.
         </p>
       </details>
     </div>

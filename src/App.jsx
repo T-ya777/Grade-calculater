@@ -9,6 +9,7 @@ import ClassInfoCard from "./components/ClassInfoCard";
 import SettingsPage from "./components/SettingsPage";
 import SemesterPage from "./components/SemesterPage";
 import { computeOverall } from "./utils/grading";
+import { exportExcelWorkbook } from "./utils/excelExport";
 import {
   loadProfiles,
   saveProfiles,
@@ -257,6 +258,18 @@ export default function App() {
     reader.readAsText(file);
   }
 
+  // Secondary export, alongside the JSON backup — a human-readable/editable
+  // spreadsheet snapshot (Overview + one sheet per class). Excel-only for
+  // now; importing it back in is a separate, not-yet-built step.
+  async function exportExcelData() {
+    try {
+      await exportExcelWorkbook(profiles, semesters, settings);
+    } catch (e) {
+      console.error("Failed to export Excel file", e);
+      alert("Couldn't build the Excel file — try again.");
+    }
+  }
+
   function clearAllData() {
     const proceed = window.confirm(
       "This permanently deletes every class, semester, and setting in this browser. " +
@@ -344,6 +357,7 @@ export default function App() {
                 onExportData={exportAllData}
                 onImportData={importAllData}
                 onClearAllData={clearAllData}
+                onExportExcel={exportExcelData}
               />
             </main>
           </>
