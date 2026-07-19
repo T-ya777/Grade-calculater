@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { letterForScore } from "../utils/grading";
 import { UNASSIGNED_SEMESTER } from "../utils/storage";
 
 const EXPANDED_SEMESTERS_KEY = "grade-calculator-expanded-semesters";
+const REORDER_HOLD_MS = 600;
 
 function loadExpanded() {
   try {
@@ -55,6 +56,7 @@ export default function ClassSidebar({
   onAddSemester,
   onRenameSemester,
   onDeleteSemester,
+  onReorderSemesters,
   onCreateClassInSemester,
   settingsOpen,
   onOpenSettings,
@@ -69,6 +71,73 @@ export default function ClassSidebar({
   const [addingSemester, setAddingSemester] = useState(false);
   const [newSemesterName, setNewSemesterName] = useState("");
   const [editingClassId, setEditingClassId] = useState(null);
+  // Press and hold a semester header (~2s) to enter reorder mode, then drag
+  // to rearrange. Only real (managed) semesters can be dragged — the
+  // read-only "Unassigned" bucket stays pinned wherever it lands.
+  const [reorderingSemesters, setReorderingSemesters] = useState(false);
+  const [dragSemester, setDragSemester] = useState(null);
+  // Which group the dragged semester would land next to, and on which side
+  // — drives the thin insertion-line indicator so it's obvious where a drop
+  // will actually land instead of just highlighting the whole row.
+  const [dropIndicator, setDropIndicator] = useState(null);
+  const holdTimerRef = useRef(null);
+
+  function startHold(key, managed) {
+    if (!managed) return;
+    cancelHold();
+    holdTimerRef.current = setTimeout(() => {
+      setReorderingSemesters(true);
+    }, REORDER_HOLD_MS);
+  }
+
+  function cancelHold() {
+    if (holdTimerRef.current) {
+      clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
+  }
+
+  function clearDrag() {
+    setDragSemester(null);
+    setDropIndicator(null);
+  }
+
+  // Hovering over a group while dragging: figure out whether the pointer is
+  // in the top or bottom half of that group, so the drop line renders
+  // above or below it accordingly (rather than always snapping "before").
+  function handleSemesterDragOver(e, key) {
+    if (!reorderingSemesters || !dragSemester) return;
+    e.preventDefault();
+    if (key === dragSemester) {
+      setDropIndicator(null);
+      return;
+    }
+    const rect = e.currentTarget.getBoundingClientRect();
+    const before = e.clientY < rect.top + rect.height / 2;
+    setDropIndicator({ key, position: before ? "before" : "after" });
+  }
+
+  function handleSemesterDrop(targetKey) {
+    if (!dragSemester || dragSemester === targetKey) {
+      clearDrag();
+      return;
+    }
+    const order = [...semesters];
+    const from = order.indexOf(dragSemester);
+    let to = order.indexOf(targetKey);
+    if (from === -1 || to === -1) {
+      clearDrag();
+      return;
+    }
+    order.splice(from, 1);
+    if (to > from) to -= 1;
+    const insertAt = dropIndicator && dropIndicator.position === "after" ? to + 1 : to;
+    order.splice(insertAt, 0, dragSemester);
+    onReorderSemesters(order);
+    clearDrag();
+  }
+
+  useEffect(() => cancelHold, []);
 
   function commitRenameClass(id, value) {
     if (value.trim()) onRename(id, value.trim());
@@ -145,9 +214,10 @@ export default function ClassSidebar({
       : UNASSIGNED_SEMESTER
     : null;
   // Manual/"past" classes (entered from the Overview page, see
-  // newManualClass) never show up in the sidebar — there's no assignment
-  // detail to open, they only exist to feed GPA/QPA. group.items still
-  // includes them further down so semester-emptiness checks stay correct.
+  // newManualClass) are excluded from the collapsed chip view — there's no
+  // assignment detail to open, so a tiny unclickable chip isn't worth the
+  // space there. They do still show in the expanded per-semester list
+  // further down, just as a non-clickable row.
   const collapsedProfiles = (
     currentSemesterKey
       ? profiles.filter((p) => {
@@ -203,18 +273,58 @@ export default function ClassSidebar({
         </div>
       ) : (
         <>
+          {reorderingSemesters && (
+            <div className="semester-reorder-banner">
+              <span>Drag semesters to reorder</span>
+              <button
+                type="button"
+                className="add-btn"
+                onClick={() => setReorderingSemesters(false)}
+              >
+                Done
+              </button>
+            </div>
+          )}
+
           {groups.map((group) => {
             const isOpen = expanded.has(group.key);
             const isEditing = editingSemester === group.key;
 
             const isSemesterActive = activeSemesterView === group.key;
+            const isDragging = dragSemester === group.key;
+
+            const showLineBefore =
+              dropIndicator && dropIndicator.key === group.key && dropIndicator.position === "before";
+            const showLineAfter =
+              dropIndicator && dropIndicator.key === group.key && dropIndicator.position === "after";
 
             return (
-              <div key={group.key} className={`semester-group ${isSemesterActive ? "active" : ""}`}>
+              <div key={group.key}>
+                {showLineBefore && <div className="semester-drop-line" />}
+                <div
+                  className={`semester-group ${isSemesterActive ? "active" : ""} ${isDragging ? "dragging" : ""}`}
+                  onDragOver={(e) => handleSemesterDragOver(e, group.key)}
+                  onDrop={() => handleSemesterDrop(group.key)}
+                >
                 <div
                   className="semester-group-header"
-                  onClick={() => handleSemesterHeaderClick(group.key)}
-                  title="Click to view GPA/QPA"
+                  onClick={() => {
+                    if (!reorderingSemesters) handleSemesterHeaderClick(group.key);
+                  }}
+                  onMouseDown={() => startHold(group.key, group.managed)}
+                  onMouseUp={cancelHold}
+                  onMouseLeave={cancelHold}
+                  onTouchStart={() => startHold(group.key, group.managed)}
+                  onTouchEnd={cancelHold}
+                  onTouchMove={cancelHold}
+                  draggable={reorderingSemesters && group.managed}
+                  onDragStart={() => setDragSemester(group.key)}
+                  onDragEnd={clearDrag}
+                  title={
+                    reorderingSemesters
+                      ? "Drag to reorder"
+                      : "Click to view GPA/QPA — press and hold to reorder"
+                  }
                 >
                   <span className="semester-caret-btn">{isOpen ? "▾" : "▸"}</span>
 
@@ -243,9 +353,7 @@ export default function ClassSidebar({
                     </span>
                   )}
 
-                  <span className="semester-count">
-                    {group.items.filter((p) => !p.isManual).length}
-                  </span>
+                  <span className="semester-count">{group.items.length}</span>
 
                   {group.managed && (
                     <button
@@ -275,7 +383,35 @@ export default function ClassSidebar({
 
                 {isOpen && (
                   <div className="class-sidebar-list">
-                    {group.items.filter((p) => !p.isManual).map((p) => {
+                    {group.items.map((p) => {
+                      if (p.isManual) {
+                        // Entered from the Overview page — shown here for
+                        // visibility, but not clickable (there's no
+                        // assignment detail to open) and no percentage
+                        // since there's nothing computed, just the letter
+                        // that was typed in.
+                        return (
+                          <div
+                            key={p.id}
+                            className="class-sidebar-item class-sidebar-item-manual"
+                            title="Entered manually — manage it from the Overview page"
+                          >
+                            <div className="class-sidebar-item-main">
+                              <span className="class-sidebar-name class-sidebar-name-label">
+                                {p.name}
+                              </span>
+                            </div>
+                            <div className="class-sidebar-grade">
+                              <span className="mini-letter">{p.manualLetter || "—"}</span>
+                              <span className="mini-pct">manual entry</span>
+                              {p.credits !== undefined && p.credits !== "" && (
+                                <span className="mini-credits">{p.credits} cr</span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      }
+
                       const grade = grades[p.id];
                       const letter =
                         grade === null || grade === undefined ? "—" : letterForScore(grade, p.scale);
@@ -339,6 +475,8 @@ export default function ClassSidebar({
                     })}
                   </div>
                 )}
+                </div>
+                {showLineAfter && <div className="semester-drop-line" />}
               </div>
             );
           })}

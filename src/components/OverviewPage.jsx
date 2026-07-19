@@ -3,6 +3,23 @@ import { computeOverall, computeSemesterGpa, letterForScore } from "../utils/gra
 import { groupProfilesBySemester } from "../utils/storage";
 
 const NEW_SEMESTER_OPTION = "__new_semester__";
+const LAST_MANUAL_SEMESTER_KEY = "grade-calculator-last-manual-semester";
+
+function loadLastManualSemester() {
+  try {
+    return localStorage.getItem(LAST_MANUAL_SEMESTER_KEY) || "";
+  } catch {
+    return "";
+  }
+}
+
+function saveLastManualSemester(name) {
+  try {
+    localStorage.setItem(LAST_MANUAL_SEMESTER_KEY, name);
+  } catch {
+    // ignore
+  }
+}
 
 // A quick "add a class you already finished" form — name, semester,
 // credits, and the final letter grade, no assignment detail needed. Kept
@@ -14,7 +31,13 @@ const NEW_SEMESTER_OPTION = "__new_semester__";
 function AddPastClassForm({ semesters, defaultScale, onAdd, onAddSemester }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
-  const [semester, setSemester] = useState(semesters[0] || "");
+  // Defaults to whichever semester you used last time, so adding several
+  // past classes from the same old semester in a row doesn't mean
+  // re-picking it every time.
+  const [semester, setSemester] = useState(() => {
+    const last = loadLastManualSemester();
+    return last && semesters.includes(last) ? last : semesters[0] || "";
+  });
   const [creatingSemester, setCreatingSemester] = useState(semesters.length === 0);
   const [newSemesterName, setNewSemesterName] = useState("");
   const [credits, setCredits] = useState(3);
@@ -22,12 +45,12 @@ function AddPastClassForm({ semesters, defaultScale, onAdd, onAddSemester }) {
 
   function reset() {
     setName("");
-    setSemester(semesters[0] || "");
-    setCreatingSemester(semesters.length === 0);
+    setCreatingSemester(false);
     setNewSemesterName("");
     setCredits(3);
     setLetter(defaultScale[0]?.letter || "");
     setOpen(false);
+    // semester intentionally left as-is, so the next add defaults to it
   }
 
   function handleSemesterSelect(value) {
@@ -52,6 +75,8 @@ function AddPastClassForm({ semesters, defaultScale, onAdd, onAddSemester }) {
     if (!name.trim() || !targetSemester || !letter) return;
     if (creatingSemester) onAddSemester(targetSemester);
     onAdd(name.trim(), targetSemester, credits === "" ? 0 : Number(credits), letter);
+    saveLastManualSemester(targetSemester);
+    setSemester(targetSemester);
     reset();
   }
 
@@ -124,6 +149,42 @@ function AddPastClassForm({ semesters, defaultScale, onAdd, onAddSemester }) {
   );
 }
 
+// Popup for reading/writing one class's notes. Kept as its own small modal
+// (reusing the existing .modal-overlay/.modal-box styles from the apply-
+// scale modal) rather than an inline textarea in the table, since notes can
+// run long and the breakdown table is already fairly dense.
+function NoteModal({ profile, onSave, onClose }) {
+  const [value, setValue] = useState(profile.overviewNote || "");
+
+  function handleSave() {
+    onSave(profile.id, value);
+    onClose();
+  }
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+        <h3>Notes — {profile.name}</h3>
+        <textarea
+          autoFocus
+          className="overview-note-textarea"
+          placeholder="Ideas, reminders, anything worth remembering about this class..."
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+        />
+        <div className="modal-actions">
+          <button type="button" className="add-btn" onClick={onClose}>
+            Cancel
+          </button>
+          <button type="button" className="add-btn primary" onClick={handleSave}>
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function OverviewPage({
   profiles,
   semesters,
@@ -134,12 +195,21 @@ export default function OverviewPage({
   onUpdateManualClass,
   onDeleteManualClass,
   onAddSemester,
+  onUpdateNote,
 }) {
   const showGpa = settings.gpaDisplay !== "qpa";
   const showQpa = settings.gpaDisplay !== "gpa";
 
   const cumulative = computeSemesterGpa(profiles, settings.gradePoints);
   const groups = groupProfilesBySemester(profiles, semesters);
+  const hasManualClasses = profiles.some((p) => p.isManual);
+  // Manual classes aren't editable by default — there's rarely a reason to
+  // touch one again once it's entered. This toggle switches every manual
+  // row across every semester into an editable state (name/credits/letter
+  // inputs + delete) at once, instead of always showing input chrome for
+  // something that's usually set-and-forget.
+  const [editingManual, setEditingManual] = useState(false);
+  const [noteProfile, setNoteProfile] = useState(null);
 
   function deleteManual(p) {
     if (window.confirm(`Remove "${p.name}" from your records? This can't be undone.`)) {
@@ -160,6 +230,15 @@ export default function OverviewPage({
           Already finished a semester and don't want to enter every assignment? Just record the
           credits and final letter grade here instead.
         </span>
+        {hasManualClasses && (
+          <button
+            type="button"
+            className={`add-btn ${editingManual ? "primary" : ""}`}
+            onClick={() => setEditingManual((v) => !v)}
+          >
+            {editingManual ? "Done editing" : "Edit past classes"}
+          </button>
+        )}
       </div>
 
       {profiles.length === 0 ? (
@@ -213,14 +292,45 @@ export default function OverviewPage({
                       <th>Letter</th>
                       <th>GPA Points</th>
                       <th>Counted</th>
+                      <th>Notes</th>
                       <th></th>
                     </tr>
                   </thead>
                   <tbody>
                     {group.profiles.map((p) => {
                       const row = rows.find((x) => x.id === p.id);
+                      const hasNote = (p.overviewNote || "").trim().length > 0;
+                      const noteCell = (
+                        <td>
+                          <button
+                            type="button"
+                            className={`icon-btn overview-note-btn ${hasNote ? "has-note" : ""}`}
+                            title={hasNote ? "View/edit notes" : "Add notes"}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setNoteProfile(p);
+                            }}
+                          >
+                            📝
+                          </button>
+                        </td>
+                      );
 
                       if (p.isManual) {
+                        if (!editingManual) {
+                          return (
+                            <tr key={p.id} className="overview-manual-row">
+                              <td>{p.name}</td>
+                              <td>{p.credits === undefined || p.credits === "" ? "—" : p.credits}</td>
+                              <td className="muted">—</td>
+                              <td>{p.manualLetter || "—"}</td>
+                              <td>{row && row.points !== null ? row.points.toFixed(1) : "—"}</td>
+                              <td>{row && row.included ? "Yes" : "No"}</td>
+                              {noteCell}
+                              <td></td>
+                            </tr>
+                          );
+                        }
                         return (
                           <tr key={p.id} className="overview-manual-row">
                             <td>
@@ -262,6 +372,7 @@ export default function OverviewPage({
                             </td>
                             <td>{row && row.points !== null ? row.points.toFixed(1) : "—"}</td>
                             <td>{row && row.included ? "Yes" : "No"}</td>
+                            {noteCell}
                             <td>
                               <button
                                 className="icon-btn danger"
@@ -289,6 +400,7 @@ export default function OverviewPage({
                           <td>{letter}</td>
                           <td>{row && row.points !== null ? row.points.toFixed(1) : "—"}</td>
                           <td>{row && row.included ? "Yes" : "No"}</td>
+                          {noteCell}
                           <td></td>
                         </tr>
                       );
@@ -299,6 +411,14 @@ export default function OverviewPage({
             );
           })}
         </>
+      )}
+
+      {noteProfile && (
+        <NoteModal
+          profile={noteProfile}
+          onSave={onUpdateNote}
+          onClose={() => setNoteProfile(null)}
+        />
       )}
     </div>
   );

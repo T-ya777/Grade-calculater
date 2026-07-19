@@ -185,6 +185,13 @@ export default function App() {
     setProfiles((prev) => prev.map((p) => (p.semester === oldName ? { ...p, semester: trimmed } : p)));
   }
 
+  // Sidebar long-press-to-reorder. Overview page reads the same `semesters`
+  // array to order its per-semester blocks, so reordering here reorders
+  // there automatically — no separate state to keep in sync.
+  function reorderSemesters(newOrder) {
+    setSemesters(newOrder);
+  }
+
   function deleteSemester(name) {
     setSemesters((prev) => prev.filter((s) => s !== name));
   }
@@ -247,6 +254,12 @@ export default function App() {
 
   function deleteManualClass(id) {
     setProfiles((prev) => prev.filter((p) => p.id !== id));
+  }
+
+  // Overview page's per-class Notes popup — works for any class, manual or
+  // regular, since it's just a free-text field on the profile.
+  function updateOverviewNote(id, note) {
+    setProfiles((prev) => prev.map((p) => (p.id === id ? { ...p, overviewNote: note } : p)));
   }
 
   // Everything lives only in localStorage, so this is the only way to back
@@ -442,6 +455,7 @@ export default function App() {
         onAddSemester={addSemester}
         onRenameSemester={renameSemester}
         onDeleteSemester={deleteSemester}
+        onReorderSemesters={reorderSemesters}
         onCreateClassInSemester={createClassInSemester}
         settingsOpen={settingsOpen}
         onOpenSettings={openSettings}
@@ -468,6 +482,7 @@ export default function App() {
                 onUpdateManualClass={updateManualClass}
                 onDeleteManualClass={deleteManualClass}
                 onAddSemester={addSemester}
+                onUpdateNote={updateOverviewNote}
               />
             </main>
           </>

@@ -38,6 +38,7 @@ export function newAssignment(name = "New Assignment") {
 export function migrateProfiles(profiles) {
   return profiles.map((p) => ({
     ...p,
+    overviewNote: p.overviewNote ?? "",
     categories: (p.categories || []).map((c) => ({
       ...c,
       assignments: (c.assignments || []).map((a) =>
@@ -136,6 +137,7 @@ export function newClassProfile(name = "New Class", scale = DEFAULT_SCALE) {
     includeInGpa: true, // toggled off automatically only when you choose to; see SummaryPanel
     isManual: false,
     manualLetter: null,
+    overviewNote: "", // free-text notes/ideas about the class, edited via the Overview page's Notes column popup
   };
 }
 
