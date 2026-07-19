@@ -79,6 +79,11 @@ export default function SemesterPage({ semesterName, profiles, settings, onSelec
   const showGpa = settings.gpaDisplay !== "qpa";
   const showQpa = settings.gpaDisplay !== "gpa";
 
+  // Total units registered this semester — every class counts toward this
+  // regardless of whether it's included in GPA/QPA (Pass/No Pass classes
+  // still take up units even though they don't move the GPA needle).
+  const totalUnits = effective.rows.reduce((sum, r) => sum + (Number(r.credits) || 0), 0);
+
   return (
     <div className={`card semester-page ${whatIf ? "what-if-active" : ""}`}>
       <div className="what-if-toggle-row">
@@ -121,6 +126,10 @@ export default function SemesterPage({ semesterName, profiles, settings, onSelec
                 </div>
               </div>
             )}
+            <div className="semester-gpa-block">
+              <div className="summary-label">Total units</div>
+              <div className="summary-score">{totalUnits}</div>
+            </div>
           </div>
 
           <table className="breakdown-table">

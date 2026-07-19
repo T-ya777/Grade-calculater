@@ -289,6 +289,47 @@ export default function SettingsPage({
       </details>
 
       <details className="settings-section">
+        <summary>Degree progress</summary>
+        <p className="muted small">
+          Powers the progress bar on the Overview page. Total units needed is whatever your
+          program requires to graduate; transfer units are any credit you came in with that isn't
+          entered as a class here.
+        </p>
+
+        <label className="scale-preset-label">
+          Total units needed
+          <input
+            type="number"
+            min="0"
+            step="1"
+            value={settings.totalUnitsNeeded ?? ""}
+            placeholder="e.g. 120"
+            onChange={(e) =>
+              onChange({
+                totalUnitsNeeded: e.target.value === "" ? null : Number(e.target.value),
+              })
+            }
+          />
+        </label>
+
+        <label className="scale-preset-label">
+          Transfer units
+          <input
+            type="number"
+            min="0"
+            step="1"
+            value={settings.transferUnits || ""}
+            placeholder="0"
+            onChange={(e) =>
+              onChange({
+                transferUnits: e.target.value === "" ? null : Number(e.target.value),
+              })
+            }
+          />
+        </label>
+      </details>
+
+      <details className="settings-section">
         <summary>Data management</summary>
         <p className="muted small">
           Everything lives only in this browser's storage. Export a backup file every so often so

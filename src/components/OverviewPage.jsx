@@ -202,6 +202,18 @@ export default function OverviewPage({
 
   const cumulative = computeSemesterGpa(profiles, settings.gradePoints);
   const groups = groupProfilesBySemester(profiles, semesters);
+
+  // Total units across every semester, plus whatever transfer credit was
+  // entered in Settings. Feeds the degree-progress bar below — units count
+  // regardless of GPA inclusion, same reasoning as the semester page.
+  const totalUnitsEarned = cumulative.rows.reduce((sum, r) => sum + (Number(r.credits) || 0), 0);
+  const transferUnits = Number(settings.transferUnits) || 0;
+  const unitsTowardDegree = totalUnitsEarned + transferUnits;
+  const unitsNeeded = settings.totalUnitsNeeded;
+  const hasProgressGoal = unitsNeeded !== null && unitsNeeded !== undefined && unitsNeeded > 0;
+  const progressPct = hasProgressGoal
+    ? Math.min(100, Math.round((unitsTowardDegree / unitsNeeded) * 100))
+    : 0;
   const hasManualClasses = profiles.some((p) => p.isManual);
   // Manual classes aren't editable by default — there's rarely a reason to
   // touch one again once it's entered. This toggle switches every manual
@@ -263,10 +275,29 @@ export default function OverviewPage({
                 </div>
               </div>
             )}
+            <div className="semester-gpa-block">
+              <div className="summary-label">Total units{transferUnits > 0 ? " (+ transfer)" : ""}</div>
+              <div className="summary-score">{unitsTowardDegree}</div>
+            </div>
           </div>
+
+          {hasProgressGoal && (
+            <div className="degree-progress">
+              <div className="degree-progress-label">
+                <span>
+                  {unitsTowardDegree} / {unitsNeeded} units toward your degree
+                </span>
+                <span>{progressPct}%</span>
+              </div>
+              <div className="degree-progress-track">
+                <div className="degree-progress-fill" style={{ width: `${progressPct}%` }} />
+              </div>
+            </div>
+          )}
 
           {groups.map((group) => {
             const { rows, gpa, qpa } = computeSemesterGpa(group.profiles, settings.gradePoints);
+            const semesterUnits = rows.reduce((sum, r) => sum + (Number(r.credits) || 0), 0);
             return (
               <div key={group.name} className="overview-semester-block">
                 <button
@@ -280,6 +311,8 @@ export default function OverviewPage({
                     {showGpa && `GPA ${gpa === null ? "—" : gpa.toFixed(2)}`}
                     {showGpa && showQpa && "  ·  "}
                     {showQpa && `QPA ${qpa === null ? "—" : qpa.toFixed(2)}`}
+                    {(showGpa || showQpa) && "  ·  "}
+                    {semesterUnits} units
                   </span>
                 </button>
 

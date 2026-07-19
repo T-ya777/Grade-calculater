@@ -181,6 +181,18 @@ export default function ClassSidebar({
     onSelectSemester(key);
   }
 
+  // The caret specifically only expands/collapses the class list — it does
+  // NOT open the semester's GPA/QPA page. Clicking the rest of the header
+  // still does both at once (see handleSemesterHeaderClick above).
+  function toggleSemesterExpanded(key) {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
   function commitAddSemester() {
     if (newSemesterName.trim()) {
       onAddSemester(newSemesterName);
@@ -326,7 +338,16 @@ export default function ClassSidebar({
                       : "Click to view GPA/QPA — press and hold to reorder"
                   }
                 >
-                  <span className="semester-caret-btn">{isOpen ? "▾" : "▸"}</span>
+                  <span
+                    className="semester-caret-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!reorderingSemesters) toggleSemesterExpanded(group.key);
+                    }}
+                    title="Expand/collapse"
+                  >
+                    {isOpen ? "▾" : "▸"}
+                  </span>
 
                   {isEditing ? (
                     <input

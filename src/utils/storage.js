@@ -194,6 +194,12 @@ export function newSettings() {
     cardVisibility: { lateDays: true, finalExam: true, classInfo: true },
     gpaDisplay: "both", // "both" | "gpa" | "qpa"
     gradePoints: DEFAULT_GRADE_POINTS.map((g) => ({ ...g })),
+    // Degree progress (Overview page progress bar): how many units the
+    // degree requires in total, and any units already granted from
+    // transfer credit — neither is tracked anywhere else in the app, so
+    // they're just plain settings rather than derived from class data.
+    totalUnitsNeeded: null,
+    transferUnits: null, // null = empty box, treated as 0 wherever it's used
   };
 }
 
