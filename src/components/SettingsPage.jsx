@@ -23,6 +23,19 @@ export default function SettingsPage({
   const [dragKey, setDragKey] = useState(null);
   const [scaleModalOpen, setScaleModalOpen] = useState(false);
   const [excelModalOpen, setExcelModalOpen] = useState(false);
+  const [feedbackText, setFeedbackText] = useState("");
+
+  const FEEDBACK_REPO = "T-ya777/Grade-calculater";
+
+  function sendFeedback() {
+    const text = feedbackText.trim();
+    if (!text) return;
+    const title = text.length > 60 ? `${text.slice(0, 57)}...` : text;
+    const url = `https://github.com/${FEEDBACK_REPO}/issues/new?title=${encodeURIComponent(
+      title
+    )}&body=${encodeURIComponent(text)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
 
   function updateDefaultScale(scale) {
     onChange({ defaultScale: scale });
@@ -321,6 +334,29 @@ export default function SettingsPage({
             }}
           />
         )}
+      </details>
+
+      <details className="settings-section">
+        <summary>Feedback</summary>
+        <p className="muted small">
+          Found something confusing, broken, or missing? Let us know — this opens a new issue on
+          GitHub, pre-filled with what you type below.
+        </p>
+
+        <textarea
+          className="feedback-textarea"
+          placeholder="What happened, or what would you like to see?"
+          rows={4}
+          value={feedbackText}
+          onChange={(e) => setFeedbackText(e.target.value)}
+        />
+
+        <div className="settings-apply-row">
+          <button className="add-btn" disabled={!feedbackText.trim()} onClick={sendFeedback}>
+            Send feedback
+          </button>
+          <span className="muted small">Opens github.com in a new tab — nothing is sent automatically.</span>
+        </div>
       </details>
     </div>
   );

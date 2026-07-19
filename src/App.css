@@ -1362,6 +1362,18 @@ header h1 {
   flex-wrap: wrap;
 }
 
+.feedback-textarea {
+  width: 100%;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+
 .card-order-list {
   display: flex;
   flex-direction: column;
