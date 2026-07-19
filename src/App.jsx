@@ -9,6 +9,7 @@ import ClassInfoCard from "./components/ClassInfoCard";
 import SettingsPage from "./components/SettingsPage";
 import SemesterPage from "./components/SemesterPage";
 import OverviewPage from "./components/OverviewPage";
+import ThreeDotMenu from "./components/ThreeDotMenu";
 import { computeOverall } from "./utils/grading";
 import { exportExcelWorkbook } from "./utils/excelExport";
 import {
@@ -22,6 +23,9 @@ import {
   newClassProfile,
   newCategory,
   UNASSIGNED_SEMESTER,
+  exportClassJson,
+  exportSemesterJson,
+  parseClassJsonFile,
 } from "./utils/storage";
 
 const SIDEBAR_COLLAPSED_KEY = "grade-calculator-sidebar-collapsed";
@@ -273,9 +277,60 @@ export default function App() {
   // Secondary export, alongside the JSON backup — a human-readable/editable
   // spreadsheet snapshot (Overview + one sheet per class). Excel-only for
   // now; importing it back in is a separate, not-yet-built step.
-  async function exportExcelData() {
+  // scopedProfiles defaults to everything, but the Settings page lets you
+  // narrow it down to specific classes/semesters first.
+  async function exportExcelData(scopedProfiles = profiles) {
     try {
-      await exportExcelWorkbook(profiles, semesters, settings);
+      await exportExcelWorkbook(scopedProfiles, semesters, settings);
+    } catch (e) {
+      console.error("Failed to export Excel file", e);
+      alert("Couldn't build the Excel file — try again.");
+    }
+  }
+
+  // Per-class export/import, from the three-dot menu next to the semester
+  // selector on the class page. Import replaces this class's data in place
+  // (keeps the same id, so it stays the same sidebar entry) — it's meant
+  // for restoring an earlier backup of this specific class, not adding a
+  // new one.
+  function exportClassJsonData(profile) {
+    exportClassJson(profile);
+  }
+
+  async function exportClassExcelData(profile) {
+    try {
+      await exportExcelWorkbook([profile], semesters, settings, `${profile.name || "class"}-export`);
+    } catch (e) {
+      console.error("Failed to export Excel file", e);
+      alert("Couldn't build the Excel file — try again.");
+    }
+  }
+
+  async function importClassJsonData(id, file) {
+    let imported;
+    try {
+      imported = await parseClassJsonFile(file);
+    } catch (e) {
+      alert(e.message);
+      return;
+    }
+    const proceed = window.confirm(
+      `This will replace all data for this class with the imported backup ("${imported.name}"). ` +
+        `This can't be undone. Continue?`
+    );
+    if (!proceed) return;
+    setProfiles((prev) => prev.map((p) => (p.id === id ? { ...imported, id } : p)));
+  }
+
+  // Semester export, from the three-dot menu on the semester page — export
+  // only, no matching import for a whole semester at once.
+  function exportSemesterJsonData(name, semesterProfilesToExport) {
+    exportSemesterJson(name, semesterProfilesToExport);
+  }
+
+  async function exportSemesterExcelData(name, semesterProfilesToExport) {
+    try {
+      await exportExcelWorkbook(semesterProfilesToExport, semesters, settings, `${name}-export`);
     } catch (e) {
       console.error("Failed to export Excel file", e);
       alert("Couldn't build the Excel file — try again.");
@@ -383,6 +438,7 @@ export default function App() {
                 settings={settings}
                 onChange={updateSettings}
                 profiles={profiles}
+                semesters={semesters}
                 onApplyScaleToClasses={applyScaleToClasses}
                 onExportData={exportAllData}
                 onImportData={importAllData}
@@ -395,6 +451,20 @@ export default function App() {
           <>
             <header>
               <h1>{semesterView}</h1>
+              <div className="header-actions">
+                <ThreeDotMenu
+                  items={[
+                    {
+                      label: "Export as JSON backup",
+                      onClick: () => exportSemesterJsonData(semesterView, semesterProfiles),
+                    },
+                    {
+                      label: "Export as Excel",
+                      onClick: () => exportSemesterExcelData(semesterView, semesterProfiles),
+                    },
+                  ]}
+                />
+              </div>
             </header>
             <main className="settings-main">
               <SemesterPage
@@ -410,25 +480,38 @@ export default function App() {
           <>
             <header>
               <h1>{active.name}</h1>
-              {semesters.length > 0 && (
-                <select
-                  className="header-semester-select"
-                  title="Semester"
-                  value={semesters.includes(active.semester) ? active.semester : ""}
-                  onChange={(e) => setClassSemester(active.id, e.target.value)}
-                >
-                  {!semesters.includes(active.semester) && (
-                    <option value="" disabled>
-                      Choose a semester...
-                    </option>
-                  )}
-                  {semesters.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-              )}
+              <div className="header-actions">
+                {semesters.length > 0 && (
+                  <select
+                    className="header-semester-select"
+                    title="Semester"
+                    value={semesters.includes(active.semester) ? active.semester : ""}
+                    onChange={(e) => setClassSemester(active.id, e.target.value)}
+                  >
+                    {!semesters.includes(active.semester) && (
+                      <option value="" disabled>
+                        Choose a semester...
+                      </option>
+                    )}
+                    {semesters.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                <ThreeDotMenu
+                  items={[
+                    { label: "Export as JSON backup", onClick: () => exportClassJsonData(active) },
+                    { label: "Export as Excel", onClick: () => exportClassExcelData(active) },
+                    {
+                      label: "Import from JSON backup",
+                      fileAccept: ".json,application/json",
+                      onFile: (file) => importClassJsonData(active.id, file),
+                    },
+                  ]}
+                />
+              </div>
             </header>
 
             <main className="main-grid">

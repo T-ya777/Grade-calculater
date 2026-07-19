@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { SCALE_PRESETS } from "../utils/grading";
 import ApplyScaleModal from "./ApplyScaleModal";
+import ExcelExportModal from "./ExcelExportModal";
 
 const CARD_LABELS = {
   lateDays: "Late Days",
@@ -12,6 +13,7 @@ export default function SettingsPage({
   settings,
   onChange,
   profiles,
+  semesters,
   onApplyScaleToClasses,
   onExportData,
   onImportData,
@@ -20,6 +22,7 @@ export default function SettingsPage({
 }) {
   const [dragKey, setDragKey] = useState(null);
   const [scaleModalOpen, setScaleModalOpen] = useState(false);
+  const [excelModalOpen, setExcelModalOpen] = useState(false);
 
   function updateDefaultScale(scale) {
     onChange({ defaultScale: scale });
@@ -152,6 +155,7 @@ export default function SettingsPage({
         {scaleModalOpen && (
           <ApplyScaleModal
             profiles={profiles}
+            semesters={semesters}
             onCancel={() => setScaleModalOpen(false)}
             onConfirm={(ids) => {
               onApplyScaleToClasses(settings.defaultScale, ids);
@@ -281,7 +285,7 @@ export default function SettingsPage({
           <button className="add-btn" onClick={onExportData}>
             Export backup
           </button>
-          <button className="add-btn" onClick={onExportExcel}>
+          <button className="add-btn" disabled={profiles.length === 0} onClick={() => setExcelModalOpen(true)}>
             Export Excel
           </button>
           <label className="add-btn settings-import-label">
@@ -305,6 +309,18 @@ export default function SettingsPage({
           everything exactly. "Export Excel" is a readable spreadsheet snapshot (an Overview
           sheet plus one sheet per class) for viewing outside the app; it can't be imported yet.
         </p>
+
+        {excelModalOpen && (
+          <ExcelExportModal
+            profiles={profiles}
+            semesters={semesters}
+            onCancel={() => setExcelModalOpen(false)}
+            onConfirm={(scopedProfiles) => {
+              onExportExcel(scopedProfiles);
+              setExcelModalOpen(false);
+            }}
+          />
+        )}
       </details>
     </div>
   );

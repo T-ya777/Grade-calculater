@@ -95,13 +95,21 @@ export default function ClassSidebar({
     }
   }, [expanded]);
 
-  function toggleSemester(key) {
+  // Clicking a semester does two things at once: if it's not the semester
+  // you're currently viewing, this opens its GPA/QPA page and expands the
+  // class list underneath. If it IS the one you're already viewing,
+  // clicking again closes the page and collapses the list — so there's
+  // one click target instead of a separate expand toggle and a separate
+  // "view GPA/QPA" button.
+  function handleSemesterHeaderClick(key) {
+    const isActive = activeSemesterView === key;
     setExpanded((prev) => {
       const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
+      if (isActive) next.delete(key);
       else next.add(key);
       return next;
     });
+    onSelectSemester(key);
   }
 
   function commitAddSemester() {
@@ -197,16 +205,19 @@ export default function ClassSidebar({
 
             return (
               <div key={group.key} className={`semester-group ${isSemesterActive ? "active" : ""}`}>
-                <div className="semester-group-header">
-                  <button className="semester-caret-btn" onClick={() => toggleSemester(group.key)}>
-                    {isOpen ? "▾" : "▸"}
-                  </button>
+                <div
+                  className="semester-group-header"
+                  onClick={() => handleSemesterHeaderClick(group.key)}
+                  title="Click to view GPA/QPA"
+                >
+                  <span className="semester-caret-btn">{isOpen ? "▾" : "▸"}</span>
 
                   {isEditing ? (
                     <input
                       autoFocus
                       className="semester-name-input"
                       defaultValue={group.key}
+                      onClick={(e) => e.stopPropagation()}
                       onBlur={(e) => commitRenameSemester(group.key, e.target.value)}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") e.target.blur();
@@ -216,11 +227,11 @@ export default function ClassSidebar({
                   ) : (
                     <span
                       className="semester-group-label"
-                      onClick={() => onSelectSemester(group.key)}
-                      onDoubleClick={() => group.managed && setEditingSemester(group.key)}
-                      title={
-                        group.managed ? "Click for GPA/QPA, double-click to rename" : "Click for GPA/QPA"
-                      }
+                      onDoubleClick={(e) => {
+                        e.stopPropagation();
+                        if (group.managed) setEditingSemester(group.key);
+                      }}
+                      title={group.managed ? "Double-click to rename" : undefined}
                     >
                       {group.key}
                     </span>
@@ -231,7 +242,10 @@ export default function ClassSidebar({
                   {group.managed && (
                     <button
                       className="icon-btn"
-                      onClick={() => onCreateClassInSemester(group.key)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onCreateClassInSemester(group.key);
+                      }}
                       title="Add class to this semester"
                     >
                       +
@@ -240,7 +254,10 @@ export default function ClassSidebar({
                   {group.managed && group.items.length === 0 && (
                     <button
                       className="icon-btn danger"
-                      onClick={() => onDeleteSemester(group.key)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteSemester(group.key);
+                      }}
                       title="Delete empty semester"
                     >
                       ✕

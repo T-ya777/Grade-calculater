@@ -1,11 +1,9 @@
 import { useState } from "react";
 import ClassPicker from "./ClassPicker";
 
-// Lets you pick exactly which existing classes should get the new default
-// scale, instead of an all-or-nothing action. The window.confirm on top of
-// this modal is a deliberate second confirmation, since this overwrites
-// each selected class's grade cutoff table.
-export default function ApplyScaleModal({ profiles, semesters, onCancel, onConfirm }) {
+// Lets you pick which classes (individually or by whole semester) go into
+// the Excel export, instead of always exporting everything.
+export default function ExcelExportModal({ profiles, semesters, onCancel, onConfirm }) {
   const [selected, setSelected] = useState(() => new Set(profiles.map((p) => p.id)));
 
   function toggle(id) {
@@ -31,27 +29,17 @@ export default function ApplyScaleModal({ profiles, semesters, onCancel, onConfi
     });
   }
 
-  function handleApply() {
-    const ids = [...selected];
-    if (ids.length === 0) return;
-    const label = `${ids.length} class${ids.length === 1 ? "" : "es"}`;
-    if (
-      window.confirm(
-        `This will overwrite the grade cutoff table for ${label}. This can't be undone. Continue?`
-      )
-    ) {
-      onConfirm(ids);
-    }
+  function handleExport() {
+    const ids = new Set(selected);
+    if (ids.size === 0) return;
+    onConfirm(profiles.filter((p) => ids.has(p.id)));
   }
 
   return (
     <div className="modal-overlay" onClick={onCancel}>
       <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-        <h3>Apply default scale to existing classes</h3>
-        <p className="muted small">
-          Choose which classes should get the new cutoff table. Grades and categories aren't
-          touched — only the scale.
-        </p>
+        <h3>Export to Excel</h3>
+        <p className="muted small">Choose which classes to include — by class, or by whole semester.</p>
 
         <ClassPicker
           profiles={profiles}
@@ -66,8 +54,8 @@ export default function ApplyScaleModal({ profiles, semesters, onCancel, onConfi
           <button className="add-btn" onClick={onCancel}>
             Cancel
           </button>
-          <button className="add-btn primary" disabled={selected.size === 0} onClick={handleApply}>
-            Apply to {selected.size} class{selected.size === 1 ? "" : "es"}
+          <button className="add-btn primary" disabled={selected.size === 0} onClick={handleExport}>
+            Export {selected.size} class{selected.size === 1 ? "" : "es"}
           </button>
         </div>
       </div>

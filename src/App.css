@@ -879,6 +879,7 @@ header h1 {
   padding: 4px 2px;
   margin-bottom: 4px;
   border-radius: 6px;
+  cursor: pointer;
 }
 
 .semester-group-header:hover {
@@ -983,6 +984,77 @@ header h1 {
   font-size: 13px;
   color: var(--muted);
   padding: 6px 10px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.three-dot-menu {
+  position: relative;
+}
+
+.three-dot-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--muted);
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.three-dot-btn:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.three-dot-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 20;
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  min-width: 190px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+}
+
+.three-dot-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: var(--text-h);
+  cursor: pointer;
+}
+
+.three-dot-item:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.three-dot-item-file {
+  position: relative;
+  overflow: hidden;
+}
+
+.three-dot-item-file input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
 }
 
 .class-info-section-label {
@@ -1333,6 +1405,31 @@ header h1 {
   align-items: center;
   gap: 8px;
   font-size: 13px;
+}
+
+.modal-semester-group {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+
+.modal-semester-group:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.modal-semester-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.modal-class-row-nested {
+  padding-left: 22px;
 }
 
 .modal-actions {

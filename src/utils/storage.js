@@ -190,3 +190,73 @@ export function saveWhatIfOverrides(semesterName, overrides) {
     console.error("Failed to save What-If overrides", e);
   }
 }
+
+function slugify(name) {
+  return (
+    (name || "export")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 40) || "export"
+  );
+}
+
+function downloadJson(payload, filename) {
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
+const dateStr = () => new Date().toISOString().slice(0, 10);
+
+// Single-class backup — the JSON version of the three-dot menu's "Export"
+// on the class page. Round-trips through parseClassJsonFile below.
+export function exportClassJson(profile) {
+  const payload = { type: "grade-calculator-class", exportedAt: new Date().toISOString(), profile };
+  downloadJson(payload, `${slugify(profile.name)}-backup-${dateStr()}.json`);
+}
+
+// Semester backup — export-only from the three-dot menu on the semester
+// page (there's no matching import; restoring a whole semester at once
+// isn't built, only single classes and the full app backup are).
+export function exportSemesterJson(semesterName, profiles) {
+  const payload = {
+    type: "grade-calculator-semester",
+    exportedAt: new Date().toISOString(),
+    semesterName,
+    profiles,
+  };
+  downloadJson(payload, `${slugify(semesterName)}-backup-${dateStr()}.json`);
+}
+
+// Reads a single-class backup file and resolves with the profile object,
+// or rejects with a user-facing message on anything that doesn't look
+// right. Doesn't touch app state — the caller decides what to do with it
+// (confirm + replace the current class, keeping its id).
+export function parseClassJsonFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      let data;
+      try {
+        data = JSON.parse(reader.result);
+      } catch {
+        reject(new Error("Couldn't read that file — make sure it's a class backup (.json)."));
+        return;
+      }
+      if (data.type !== "grade-calculator-class" || !data.profile || typeof data.profile !== "object") {
+        reject(new Error("That file doesn't look like a single-class backup — import cancelled."));
+        return;
+      }
+      resolve(data.profile);
+    };
+    reader.onerror = () => reject(new Error("Couldn't read that file — try again."));
+    reader.readAsText(file);
+  });
+}

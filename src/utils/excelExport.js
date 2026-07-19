@@ -191,7 +191,7 @@ function buildClassSheet(wb, profile, usedNames) {
  * round-trips through import yet, that's a separate, not-yet-built step.
  * exceljs is a large library, so it's only loaded when this actually runs
  * instead of bloating the app's initial bundle. */
-export async function exportExcelWorkbook(profiles, semesters, settings) {
+export async function exportExcelWorkbook(profiles, semesters, settings, filenameBase = "grade-calculator-export") {
   const { default: ExcelJS } = await import("exceljs");
   const wb = new ExcelJS.Workbook();
   wb.creator = "Grade Calculator";
@@ -210,7 +210,7 @@ export async function exportExcelWorkbook(profiles, semesters, settings) {
   const a = document.createElement("a");
   const dateStr = new Date().toISOString().slice(0, 10);
   a.href = url;
-  a.download = `grade-calculator-export-${dateStr}.xlsx`;
+  a.download = `${filenameBase}-${dateStr}.xlsx`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
