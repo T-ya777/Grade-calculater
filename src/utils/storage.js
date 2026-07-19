@@ -22,12 +22,54 @@ export function newCategory(name = "New Category", opts = {}) {
   };
 }
 
+// `confirmed: false` by default — a freshly entered score is treated as
+// hypothetical until you check it off as your actual final grade for that
+// assignment. See migrateProfiles() below for how existing (pre-this-
+// feature) assignments are handled so old real grades don't suddenly get
+// flagged as hypothetical.
 export function newAssignment(name = "New Assignment") {
-  return { id: uid(), name, earned: "", possible: "", lateDaysUsed: 0 };
+  return { id: uid(), name, earned: "", possible: "", lateDaysUsed: 0, confirmed: false };
+}
+
+// Backfills fields added after someone may have already saved data, so old
+// saves don't silently break or get mis-flagged. Currently just: any
+// assignment saved before the "confirmed" checkbox existed is treated as
+// already confirmed (it was real data at the time), not hypothetical.
+export function migrateProfiles(profiles) {
+  return profiles.map((p) => ({
+    ...p,
+    categories: (p.categories || []).map((c) => ({
+      ...c,
+      assignments: (c.assignments || []).map((a) =>
+        a.confirmed === undefined ? { ...a, confirmed: true } : a
+      ),
+    })),
+  }));
 }
 
 export function newWebsiteLink(label = "", url = "") {
   return { id: uid(), label, url };
+}
+
+const SKIP_CATEGORY_DELETE_CONFIRM_KEY = "grade-calculator-skip-category-delete-confirm";
+
+// "Don't ask me again" for the delete-category confirmation. Global across
+// the app (not per-class) since it's a one-time "I know what I'm doing"
+// preference, not something worth re-deciding per class.
+export function getSkipCategoryDeleteConfirm() {
+  try {
+    return localStorage.getItem(SKIP_CATEGORY_DELETE_CONFIRM_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+export function setSkipCategoryDeleteConfirm(skip) {
+  try {
+    localStorage.setItem(SKIP_CATEGORY_DELETE_CONFIRM_KEY, String(skip));
+  } catch {
+    // ignore
+  }
 }
 
 export function loadSemesters() {

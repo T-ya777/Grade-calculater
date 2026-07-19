@@ -11,7 +11,7 @@ function withAlpha(hex, alpha) {
 }
 
 export default function SummaryPanel({ overall, scale, onScaleChange, credits, onCreditsChange }) {
-  const { currentGrade, worstCaseGrade, rows, gradedWeightSum, totalWeight } = overall;
+  const { currentGrade, rows, gradedWeightSum, totalWeight } = overall;
   const letter = letterForScore(currentGrade, scale);
   const gradeColor = colorForLetterGrade(letter);
 
@@ -53,17 +53,6 @@ export default function SummaryPanel({ overall, scale, onScaleChange, credits, o
           <div className="summary-sub">
             {gradedWeightSum.toFixed(1)}% of the {totalWeight.toFixed(1)}% weight has grades entered
           </div>
-
-          {totalWeight > gradedWeightSum && (
-            <>
-              <div className="summary-label" style={{ marginTop: 10 }}>
-                Worst case if remaining work scores 0
-              </div>
-              <div className="summary-score muted">
-                {worstCaseGrade === null ? "—" : `${worstCaseGrade.toFixed(2)}%`}
-              </div>
-            </>
-          )}
         </div>
       </div>
 

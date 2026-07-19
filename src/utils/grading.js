@@ -38,12 +38,53 @@ export function computeCategoryScore(category) {
 }
 
 /**
+ * Mirrors computeCategoryScore's own drop-lowest logic, but returns just
+ * the ids of the assignments that get excluded, so the UI can gray them
+ * out instead of silently dropping them with no explanation.
+ */
+export function getDroppedAssignmentIds(category) {
+  const isValid = (a) =>
+    a.possible !== "" && a.possible !== null && Number(a.possible) > 0 && a.earned !== "" && a.earned !== null;
+
+  const valid = (category.assignments || []).filter(isValid);
+  if (valid.length === 0) return new Set();
+
+  const withPct = valid.map((a) => ({
+    id: a.id,
+    pct: (Number(a.earned) / Number(a.possible)) * 100,
+  }));
+
+  withPct.sort((a, b) => a.pct - b.pct);
+
+  const dropCount = Math.min(category.dropLowest || 0, Math.max(withPct.length - 1, 0));
+  return new Set(withPct.slice(0, dropCount).map((a) => a.id));
+}
+
+/**
+ * Counts assignments across a class that have a score entered but aren't
+ * checked off as "final" yet — i.e. they're counted in the current grade,
+ * but they're a guess, not a confirmed grade. Used to show the "some of
+ * this grade is hypothetical" banner and to drive the "clear hypothetical
+ * scores" button, which only touches assignments this counts.
+ */
+export function countHypotheticalAssignments(categories) {
+  const hasScore = (a) =>
+    a.possible !== "" && a.possible !== null && Number(a.possible) > 0 && a.earned !== "" && a.earned !== null;
+
+  let count = 0;
+  (categories || []).forEach((cat) => {
+    (cat.assignments || []).forEach((a) => {
+      if (hasScore(a) && !a.confirmed) count += 1;
+    });
+  });
+  return count;
+}
+
+/**
  * Compute the overall grade across categories.
  * Only categories that currently have at least one valid assignment contribute,
  * and their weights are re-normalized to 100% so the result reads as
  * "your grade based on everything entered so far."
- * Also returns the "final" projection assuming ungraded categories stay at 0,
- * using the full declared weights (useful as a floor / worst-case number).
  */
 export function computeOverall(categories) {
   const rows = categories.map((cat) => {
@@ -60,10 +101,6 @@ export function computeOverall(categories) {
       : null;
 
   const totalWeight = rows.reduce((s, r) => s + r.weight, 0);
-  const worstCaseGrade =
-    totalWeight > 0
-      ? gradedRows.reduce((s, r) => s + r.score * r.weight, 0) / totalWeight
-      : null;
 
   return {
     rows: rows.map((r) => ({
@@ -72,7 +109,6 @@ export function computeOverall(categories) {
         r.score !== null && gradedWeightSum > 0 ? (r.score * r.weight) / gradedWeightSum : null,
     })),
     currentGrade,
-    worstCaseGrade,
     totalWeight,
     gradedWeightSum,
   };
@@ -232,8 +268,7 @@ export function neededOnCategory(categories, targetCategoryId, targetOverall) {
 /**
  * "What-if" forward simulation: if a chosen category ended up scoring
  * `hypotheticalScore`, what would the overall grade be? Other categories
- * keep their current score (or 0 if ungraded), using full declared weights
- * — the same convention as computeOverall's worstCaseGrade.
+ * keep their current score (or 0 if ungraded), using full declared weights.
  */
 export function simulateCategoryScore(categories, targetCategoryId, hypotheticalScore) {
   const rows = categories.map((cat) => ({

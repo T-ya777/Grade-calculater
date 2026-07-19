@@ -10,7 +10,7 @@ import SettingsPage from "./components/SettingsPage";
 import SemesterPage from "./components/SemesterPage";
 import OverviewPage from "./components/OverviewPage";
 import ThreeDotMenu from "./components/ThreeDotMenu";
-import { computeOverall } from "./utils/grading";
+import { computeOverall, countHypotheticalAssignments } from "./utils/grading";
 import { exportExcelWorkbook } from "./utils/excelExport";
 import {
   loadProfiles,
@@ -26,6 +26,7 @@ import {
   exportClassJson,
   exportSemesterJson,
   parseClassJsonFile,
+  migrateProfiles,
 } from "./utils/storage";
 
 const SIDEBAR_COLLAPSED_KEY = "grade-calculator-sidebar-collapsed";
@@ -55,7 +56,7 @@ export default function App() {
     setSettings(storedSettings);
 
     if (storedProfiles.length > 0 || storedSemesters.length > 0) {
-      setProfiles(storedProfiles);
+      setProfiles(migrateProfiles(storedProfiles));
       setSemesters(storedSemesters);
       setActiveId(storedProfiles[0]?.id ?? null);
     } else {
@@ -128,6 +129,25 @@ export default function App() {
 
   function deleteCategory(id) {
     updateActive({ categories: active.categories.filter((c) => c.id !== id) });
+  }
+
+  // Wipes out every assignment score that's still hypothetical (has a
+  // score entered, but the "Final?" checkbox isn't checked) for the active
+  // class, across all categories in one go. Confirmed scores are untouched.
+  // Only clears "earned" — "possible" stays, since that's the assignment's
+  // point value, not a guess.
+  function clearHypotheticalScores() {
+    const hasScore = (a) =>
+      a.possible !== "" && a.possible !== null && Number(a.possible) > 0 && a.earned !== "" && a.earned !== null;
+    const proceed = window.confirm(
+      "This clears every not-yet-final score entered for this class (keeping each assignment's point value). Confirmed final grades are left alone. Continue?"
+    );
+    if (!proceed) return;
+    const categories = active.categories.map((c) => ({
+      ...c,
+      assignments: c.assignments.map((a) => (hasScore(a) && !a.confirmed ? { ...a, earned: "" } : a)),
+    }));
+    updateActive({ categories });
   }
 
   function createClassInSemester(semesterName) {
@@ -262,7 +282,7 @@ export default function App() {
       );
       if (!proceed) return;
 
-      setProfiles(data.profiles);
+      setProfiles(migrateProfiles(data.profiles));
       setSemesters(data.semesters);
       setSettings({ ...newSettings(), ...data.settings });
       setActiveId(data.profiles[0]?.id ?? null);
@@ -319,7 +339,8 @@ export default function App() {
         `This can't be undone. Continue?`
     );
     if (!proceed) return;
-    setProfiles((prev) => prev.map((p) => (p.id === id ? { ...imported, id } : p)));
+    const [migratedImport] = migrateProfiles([imported]);
+    setProfiles((prev) => prev.map((p) => (p.id === id ? { ...migratedImport, id } : p)));
   }
 
   // Semester export, from the three-dot menu on the semester page — export
@@ -369,6 +390,7 @@ export default function App() {
     : [];
 
   const overall = active ? computeOverall(active.categories) : null;
+  const hypotheticalCount = active ? countHypotheticalAssignments(active.categories) : 0;
 
   const cardRenderers = {
     lateDays: () => (
@@ -450,20 +472,22 @@ export default function App() {
         ) : semesterView ? (
           <>
             <header>
-              <h1>{semesterView}</h1>
-              <div className="header-actions">
-                <ThreeDotMenu
-                  items={[
-                    {
-                      label: "Export as JSON backup",
-                      onClick: () => exportSemesterJsonData(semesterView, semesterProfiles),
-                    },
-                    {
-                      label: "Export as Excel",
-                      onClick: () => exportSemesterExcelData(semesterView, semesterProfiles),
-                    },
-                  ]}
-                />
+              <div className="header-row">
+                <h1>{semesterView}</h1>
+                <div className="header-actions">
+                  <ThreeDotMenu
+                    items={[
+                      {
+                        label: "Export as JSON backup",
+                        onClick: () => exportSemesterJsonData(semesterView, semesterProfiles),
+                      },
+                      {
+                        label: "Export as Excel",
+                        onClick: () => exportSemesterExcelData(semesterView, semesterProfiles),
+                      },
+                    ]}
+                  />
+                </div>
               </div>
             </header>
             <main className="settings-main">
@@ -479,45 +503,60 @@ export default function App() {
         ) : (
           <>
             <header>
-              <h1>{active.name}</h1>
-              <div className="header-actions">
-                {semesters.length > 0 && (
-                  <select
-                    className="header-semester-select"
-                    title="Semester"
-                    value={semesters.includes(active.semester) ? active.semester : ""}
-                    onChange={(e) => setClassSemester(active.id, e.target.value)}
-                  >
-                    {!semesters.includes(active.semester) && (
-                      <option value="" disabled>
-                        Choose a semester...
-                      </option>
-                    )}
-                    {semesters.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                <ThreeDotMenu
-                  items={[
-                    { label: "Export as JSON backup", onClick: () => exportClassJsonData(active) },
-                    { label: "Export as Excel", onClick: () => exportClassExcelData(active) },
-                    {
-                      label: "Import from JSON backup",
-                      fileAccept: ".json,application/json",
-                      onFile: (file) => importClassJsonData(active.id, file),
-                    },
-                  ]}
-                />
+              <div className="header-row">
+                <h1>{active.name}</h1>
+                <div className="header-actions">
+                  {semesters.length > 0 && (
+                    <select
+                      className="header-semester-select"
+                      title="Semester"
+                      value={semesters.includes(active.semester) ? active.semester : ""}
+                      onChange={(e) => setClassSemester(active.id, e.target.value)}
+                    >
+                      {!semesters.includes(active.semester) && (
+                        <option value="" disabled>
+                          Choose a semester...
+                        </option>
+                      )}
+                      {semesters.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  <ThreeDotMenu
+                    items={[
+                      { label: "Export as JSON backup", onClick: () => exportClassJsonData(active) },
+                      { label: "Export as Excel", onClick: () => exportClassExcelData(active) },
+                      {
+                        label: "Import from JSON backup",
+                        fileAccept: ".json,application/json",
+                        onFile: (file) => importClassJsonData(active.id, file),
+                      },
+                    ]}
+                  />
+                </div>
               </div>
+
+              {hypotheticalCount > 0 && (
+                <div className="hypothetical-banner">
+                  <span>
+                    {hypotheticalCount} assignment score{hypotheticalCount === 1 ? "" : "s"} not yet
+                    checked off as final — your current grade includes {hypotheticalCount === 1 ? "it" : "them"}.
+                  </span>
+                  <button type="button" className="hypothetical-clear-btn" onClick={clearHypotheticalScores}>
+                    Clear hypothetical scores
+                  </button>
+                </div>
+              )}
             </header>
 
             <main className="main-grid">
               <div className="categories-column">
                 {active.categories.map((cat) => {
                   const row = overall.rows.find((r) => r.id === cat.id);
+                  const finalExamCategory = active.categories.find((c) => c.isFinalExam);
                   return (
                     <CategoryCard
                       key={cat.id}
@@ -526,6 +565,8 @@ export default function App() {
                       contribution={row?.contribution ?? null}
                       onChange={updateCategory}
                       onDelete={() => deleteCategory(cat.id)}
+                      finalExamCategoryId={finalExamCategory?.id ?? null}
+                      finalExamCategoryName={finalExamCategory?.name ?? null}
                     />
                   );
                 })}
