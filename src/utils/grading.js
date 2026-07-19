@@ -332,6 +332,10 @@ export function pointsForLetter(letter, gradePoints) {
  * `includeInGpa: false`, and its current letter grade resolves to a point
  * value in `gradePoints` (so Pass/No Pass and ungraded classes are
  * naturally excluded unless the table is customized to cover them).
+ *
+ * Manual/"past" classes (`isManual: true`, see newManualClass in
+ * storage.js) skip the assignment-based calculation entirely and use
+ * `manualLetter` directly — there are no categories to compute from.
  */
 export function computeSemesterGpa(classProfiles, gradePoints) {
   let simpleSum = 0;
@@ -340,8 +344,9 @@ export function computeSemesterGpa(classProfiles, gradePoints) {
   let creditWeightedSum = 0;
 
   const rows = classProfiles.map((p) => {
-    const overall = computeOverall(p.categories);
-    const letter = letterForScore(overall.currentGrade, p.scale);
+    const letter = p.isManual
+      ? p.manualLetter || "—"
+      : letterForScore(computeOverall(p.categories).currentGrade, p.scale);
     const excludedByChoice = p.includeInGpa === false;
     const points = excludedByChoice ? null : pointsForLetter(letter, gradePoints);
     const credits = Number(p.credits) || 0;
@@ -354,7 +359,7 @@ export function computeSemesterGpa(classProfiles, gradePoints) {
       creditWeightedSum += points * credits;
     }
 
-    return { id: p.id, name: p.name, letter, points, credits, included };
+    return { id: p.id, name: p.name, letter, points, credits, included, isManual: !!p.isManual };
   });
 
   return {

@@ -144,12 +144,18 @@ export default function ClassSidebar({
       ? activeProfile.semester.trim()
       : UNASSIGNED_SEMESTER
     : null;
-  const collapsedProfiles = currentSemesterKey
-    ? profiles.filter((p) => {
-        const key = p.semester && p.semester.trim() ? p.semester.trim() : UNASSIGNED_SEMESTER;
-        return key === currentSemesterKey;
-      })
-    : profiles;
+  // Manual/"past" classes (entered from the Overview page, see
+  // newManualClass) never show up in the sidebar — there's no assignment
+  // detail to open, they only exist to feed GPA/QPA. group.items still
+  // includes them further down so semester-emptiness checks stay correct.
+  const collapsedProfiles = (
+    currentSemesterKey
+      ? profiles.filter((p) => {
+          const key = p.semester && p.semester.trim() ? p.semester.trim() : UNASSIGNED_SEMESTER;
+          return key === currentSemesterKey;
+        })
+      : profiles
+  ).filter((p) => !p.isManual);
 
   return (
     <aside className={`class-sidebar ${collapsed ? "collapsed" : ""}`}>
@@ -237,7 +243,9 @@ export default function ClassSidebar({
                     </span>
                   )}
 
-                  <span className="semester-count">{group.items.length}</span>
+                  <span className="semester-count">
+                    {group.items.filter((p) => !p.isManual).length}
+                  </span>
 
                   {group.managed && (
                     <button
@@ -267,7 +275,7 @@ export default function ClassSidebar({
 
                 {isOpen && (
                   <div className="class-sidebar-list">
-                    {group.items.map((p) => {
+                    {group.items.filter((p) => !p.isManual).map((p) => {
                       const grade = grades[p.id];
                       const letter =
                         grade === null || grade === undefined ? "—" : letterForScore(grade, p.scale);

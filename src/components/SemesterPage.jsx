@@ -137,7 +137,12 @@ export default function SemesterPage({ semesterName, profiles, settings, onSelec
               {effective.rows.map((r) => {
                 const profile = profiles.find((p) => p.id === r.id);
                 return (
-                  <tr key={r.id} className="semester-row-clickable" onClick={() => onSelectClass(r.id)}>
+                  <tr
+                    key={r.id}
+                    className={r.isManual ? "" : "semester-row-clickable"}
+                    onClick={() => !r.isManual && onSelectClass(r.id)}
+                    title={r.isManual ? "Entered manually from the Overview page" : undefined}
+                  >
                     <td>{r.name}</td>
                     <td onClick={(e) => whatIf && e.stopPropagation()}>
                       {whatIf ? (

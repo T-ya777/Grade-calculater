@@ -1317,6 +1317,45 @@ header h1 {
   white-space: nowrap;
 }
 
+.overview-add-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.add-past-class-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.add-past-class-name {
+  min-width: 160px;
+}
+
+.add-past-class-credits {
+  width: 64px;
+}
+
+.overview-manual-row {
+  background: var(--accent-bg);
+}
+
+.overview-manual-input,
+.overview-manual-select {
+  width: 100%;
+  font-size: 13px;
+}
+
+.overview-manual-credits {
+  width: 56px;
+}
+
 /* Settings page */
 .settings-main {
   width: 100%;

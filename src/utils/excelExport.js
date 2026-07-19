@@ -199,8 +199,11 @@ export async function exportExcelWorkbook(profiles, semesters, settings, filenam
 
   buildOverviewSheet(wb, profiles, semesters, settings);
 
+  // Manual/"past" classes have no categories to lay out — their letter
+  // grade and credits already show up on the Overview sheet, so they don't
+  // get their own (otherwise empty) sheet here.
   const usedNames = new Set();
-  profiles.forEach((p) => buildClassSheet(wb, p, usedNames));
+  profiles.filter((p) => !p.isManual).forEach((p) => buildClassSheet(wb, p, usedNames));
 
   const buffer = await wb.xlsx.writeBuffer();
   const blob = new Blob([buffer], {

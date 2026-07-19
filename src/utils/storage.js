@@ -134,6 +134,27 @@ export function newClassProfile(name = "New Class", scale = DEFAULT_SCALE) {
     websiteLinks: [],
     syllabus: null, // { name, type, size, dataUrl } once uploaded
     includeInGpa: true, // toggled off automatically only when you choose to; see SummaryPanel
+    isManual: false,
+    manualLetter: null,
+  };
+}
+
+// A "past class" — for a semester you've already finished and don't want
+// to re-enter assignment by assignment. Just a name, credits, and the
+// final letter grade you got, entered once from the Overview page. No
+// categories, so it never shows up in the sidebar or opens a class page
+// (there'd be nothing to show); it only exists to contribute to GPA/QPA
+// and appears in the Overview/Semester breakdown tables. See
+// computeSemesterGpa in grading.js for how `manualLetter` is used instead
+// of computing a letter from assignment scores.
+export function newManualClass(name, semester, credits, letter) {
+  return {
+    ...newClassProfile(name),
+    semester,
+    credits,
+    categories: [],
+    isManual: true,
+    manualLetter: letter,
   };
 }
 

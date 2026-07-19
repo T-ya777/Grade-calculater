@@ -22,6 +22,7 @@ import {
   newSettings,
   newClassProfile,
   newCategory,
+  newManualClass,
   UNASSIGNED_SEMESTER,
   exportClassJson,
   exportSemesterJson,
@@ -230,6 +231,22 @@ export default function App() {
 
   function toggleIncludeInGpa(id, next) {
     setProfiles((prev) => prev.map((p) => (p.id === id ? { ...p, includeInGpa: next } : p)));
+  }
+
+  // Manual/"past" classes — added and managed entirely from the Overview
+  // page (see newManualClass in storage.js). They never become the active
+  // class, so unlike deleteClass this never touches activeId.
+  function addManualClass(name, semester, credits, letter) {
+    const p = newManualClass(name, semester, credits, letter);
+    setProfiles((prev) => [...prev, p]);
+  }
+
+  function updateManualClass(id, patch) {
+    setProfiles((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+  }
+
+  function deleteManualClass(id) {
+    setProfiles((prev) => prev.filter((p) => p.id !== id));
   }
 
   // Everything lives only in localStorage, so this is the only way to back
@@ -447,6 +464,10 @@ export default function App() {
                 settings={settings}
                 onSelectSemester={openSemesterView}
                 onSelectClass={selectClass}
+                onAddManualClass={addManualClass}
+                onUpdateManualClass={updateManualClass}
+                onDeleteManualClass={deleteManualClass}
+                onAddSemester={addSemester}
               />
             </main>
           </>
