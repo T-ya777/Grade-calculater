@@ -54,37 +54,41 @@ function saveLastManualSemester(name) {
   }
 }
 
-// A quick "add a class you already finished" form — name, semester,
-// credits, and the final letter grade, no assignment detail needed. Kept
-// closed by default so it doesn't clutter the page for anyone who doesn't
-// need it. The semester dropdown includes a "+ New semester..." option so
-// you're not forced to go create one in the sidebar first — a semester is
-// just a name either way, and can hold a mix of fully-detailed classes and
-// quick past-class entries like this one.
+let manualRowIdCounter = 0;
+function newManualRow(letter) {
+  manualRowIdCounter += 1;
+  return { key: manualRowIdCounter, name: "", credits: 3, letter };
+}
+
+// A quick "add classes you already finished" form. Semester is picked once,
+// on the left — since it's rare to backfill classes from more than one
+// semester in the same sitting — and every class row on the right shares
+// it, so you can queue up a whole semester's transcript (name/credits/
+// letter per row) and submit all of them in one click instead of reopening
+// this form per class. The semester dropdown includes a "+ New
+// semester..." option so you're not forced to go create one in the sidebar
+// first — a semester is just a name either way, and can hold a mix of
+// fully-detailed classes and quick past-class entries like these.
 function AddPastClassForm({ semesters, defaultScale, onAdd, onAddSemester }) {
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
-  // Defaults to whichever semester you used last time, so adding several
-  // past classes from the same old semester in a row doesn't mean
-  // re-picking it every time.
+  const letterOptions = withPassNoPass(defaultScale);
+  const defaultLetter = letterOptions[0]?.letter || "";
+  // Defaults to whichever semester you used last time, so batches from the
+  // same old semester in a row don't mean re-picking it every time.
   const [semester, setSemester] = useState(() => {
     const last = loadLastManualSemester();
     return last && semesters.includes(last) ? last : semesters[0] || "";
   });
   const [creatingSemester, setCreatingSemester] = useState(semesters.length === 0);
   const [newSemesterName, setNewSemesterName] = useState("");
-  const [credits, setCredits] = useState(3);
-  const letterOptions = withPassNoPass(defaultScale);
-  const [letter, setLetter] = useState(letterOptions[0]?.letter || "");
+  const [rows, setRows] = useState(() => [newManualRow(defaultLetter)]);
 
-  function reset() {
-    setName("");
-    setCreatingSemester(false);
+  function close() {
+    setRows([newManualRow(defaultLetter)]);
+    setCreatingSemester(semesters.length === 0);
     setNewSemesterName("");
-    setCredits(3);
-    setLetter(letterOptions[0]?.letter || "");
     setOpen(false);
-    // semester intentionally left as-is, so the next add defaults to it
+    // semester intentionally left as-is, so the next batch defaults to it
   }
 
   function handleSemesterSelect(value) {
@@ -104,81 +108,142 @@ function AddPastClassForm({ semesters, defaultScale, onAdd, onAddSemester }) {
     setNewSemesterName("");
   }
 
-  function handleAdd() {
+  function updateRow(key, patch) {
+    setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+  }
+
+  function addRow() {
+    setRows((prev) => [...prev, newManualRow(defaultLetter)]);
+  }
+
+  function removeRow(key) {
+    setRows((prev) => (prev.length > 1 ? prev.filter((r) => r.key !== key) : prev));
+  }
+
+  const validRows = rows.filter((r) => r.name.trim());
+
+  function handleAddAll() {
     const targetSemester = creatingSemester ? newSemesterName.trim() : semester;
-    if (!name.trim() || !targetSemester || !letter) return;
+    if (!targetSemester || validRows.length === 0) return;
     if (creatingSemester) onAddSemester(targetSemester);
-    onAdd(name.trim(), targetSemester, credits === "" ? 0 : Number(credits), letter);
+    validRows.forEach((r) => {
+      onAdd(r.name.trim(), targetSemester, r.credits === "" ? 0 : Number(r.credits), r.letter);
+    });
     saveLastManualSemester(targetSemester);
     setSemester(targetSemester);
-    reset();
+    setCreatingSemester(false);
+    setNewSemesterName("");
+    setRows([newManualRow(defaultLetter)]);
+    // stays open — batching several semesters in a row shouldn't mean
+    // reopening the form each time
   }
 
   if (!open) {
     return (
       <button type="button" className="add-btn" onClick={() => setOpen(true)}>
-        + Add a past class
+        + Add past classes
       </button>
     );
   }
 
   return (
     <div className="add-past-class-form">
-      <input
-        className="add-past-class-name"
-        placeholder="Class name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        autoFocus
-      />
+      <div className="add-past-class-semester-col">
+        <span className="add-past-class-semester-label">Semester</span>
+        {creatingSemester ? (
+          <input
+            autoFocus
+            className="add-past-class-name"
+            placeholder="New semester name"
+            value={newSemesterName}
+            onChange={(e) => setNewSemesterName(e.target.value)}
+            onBlur={commitNewSemester}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commitNewSemester();
+              if (e.key === "Escape" && semesters.length > 0) {
+                setCreatingSemester(false);
+                setNewSemesterName("");
+              }
+            }}
+          />
+        ) : (
+          <select value={semester} onChange={(e) => handleSemesterSelect(e.target.value)}>
+            {semesters.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+            <option value={NEW_SEMESTER_OPTION}>+ New semester...</option>
+          </select>
+        )}
+      </div>
 
-      {creatingSemester ? (
-        <input
-          className="add-past-class-name"
-          placeholder="New semester name"
-          value={newSemesterName}
-          onChange={(e) => setNewSemesterName(e.target.value)}
-          onBlur={commitNewSemester}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") commitNewSemester();
-            if (e.key === "Escape" && semesters.length > 0) {
-              setCreatingSemester(false);
-              setNewSemesterName("");
-            }
-          }}
-        />
-      ) : (
-        <select value={semester} onChange={(e) => handleSemesterSelect(e.target.value)}>
-          {semesters.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-          <option value={NEW_SEMESTER_OPTION}>+ New semester...</option>
-        </select>
-      )}
-
-      <input
-        type="number"
-        min="0"
-        step="0.5"
-        className="add-past-class-credits"
-        value={credits}
-        onChange={(e) => setCredits(e.target.value === "" ? "" : Number(e.target.value))}
-      />
-      <select value={letter} onChange={(e) => setLetter(e.target.value)}>
-        {letterOptions.map((s) => (
-          <option key={s.letter} value={s.letter}>
-            {s.letter}
-          </option>
+      <div className="add-past-class-rows-col">
+        <div className="add-past-class-row-header">
+          <span className="add-past-class-semester-label add-past-class-name-label">Class</span>
+          <span className="add-past-class-semester-label add-past-class-credits">Credits</span>
+          <span className="add-past-class-semester-label add-past-class-letter-label">Letter</span>
+          <span className="add-past-class-row-header-spacer" />
+        </div>
+        {rows.map((row, i) => (
+          <div className="add-past-class-row" key={row.key}>
+            <input
+              className="add-past-class-name"
+              placeholder="Class name"
+              value={row.name}
+              onChange={(e) => updateRow(row.key, { name: e.target.value })}
+              autoFocus={i === rows.length - 1}
+            />
+            <input
+              type="number"
+              min="0"
+              step="0.5"
+              className="add-past-class-credits"
+              value={row.credits}
+              onChange={(e) =>
+                updateRow(row.key, { credits: e.target.value === "" ? "" : Number(e.target.value) })
+              }
+            />
+            <select
+              className="add-past-class-letter"
+              value={row.letter}
+              onChange={(e) => updateRow(row.key, { letter: e.target.value })}
+            >
+              {letterOptions.map((s) => (
+                <option key={s.letter} value={s.letter}>
+                  {s.letter}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="icon-btn danger"
+              title="Remove this row"
+              disabled={rows.length === 1}
+              onClick={() => removeRow(row.key)}
+            >
+              ✕
+            </button>
+          </div>
         ))}
-      </select>
-      <button type="button" className="add-btn primary" disabled={!name.trim()} onClick={handleAdd}>
-        Add
-      </button>
-      <button type="button" className="add-btn" onClick={reset}>
-        Cancel
-      </button>
+
+        <div className="add-past-class-actions">
+          <button type="button" className="add-btn" onClick={addRow}>
+            + Add another class
+          </button>
+          <button
+            type="button"
+            className="add-btn primary"
+            disabled={validRows.length === 0}
+            onClick={handleAddAll}
+          >
+            Add {validRows.length || ""} class{validRows.length === 1 ? "" : "es"}
+          </button>
+          <button type="button" className="add-btn" onClick={close}>
+            Done
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

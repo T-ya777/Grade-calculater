@@ -71,9 +71,20 @@ export default function ClassSidebar({
   const [addingSemester, setAddingSemester] = useState(false);
   const [newSemesterName, setNewSemesterName] = useState("");
   const [editingClassId, setEditingClassId] = useState(null);
-  // Press and hold a semester header (~2s) to enter reorder mode, then drag
-  // to rearrange. Only real (managed) semesters can be dragged — the
+  // Press and hold a semester header (~0.6s) to enter reorder mode, then
+  // drag to rearrange. Only real (managed) semesters can be dragged — the
   // read-only "Unassigned" bucket stays pinned wherever it lands.
+  //
+  // This is a hand-rolled drag implementation (pointer position + manual
+  // hit-testing) rather than the native HTML5 drag-and-drop API. The native
+  // API decides whether an element is "draggable" at the moment the
+  // mousedown/drag gesture begins — flipping the `draggable` attribute
+  // reactively via the hold timer, while the mouse button is still held
+  // down from that same press, does NOT retroactively make that press
+  // draggable. That made the original press-and-hold-then-drag gesture
+  // silently do nothing: reorder mode would visually activate, but no
+  // drag ever started. Tracking pointer move/up on `window` instead avoids
+  // that limitation entirely and works for the same continuous gesture.
   const [reorderingSemesters, setReorderingSemesters] = useState(false);
   const [dragSemester, setDragSemester] = useState(null);
   // Which group the dragged semester would land next to, and on which side
@@ -81,12 +92,25 @@ export default function ClassSidebar({
   // will actually land instead of just highlighting the whole row.
   const [dropIndicator, setDropIndicator] = useState(null);
   const holdTimerRef = useRef(null);
+  const dropIndicatorRef = useRef(null);
+
+  function setDropIndicatorBoth(value) {
+    dropIndicatorRef.current = value;
+    setDropIndicator(value);
+  }
 
   function startHold(key, managed) {
     if (!managed) return;
     cancelHold();
+    if (reorderingSemesters) {
+      // Already in reorder mode from an earlier press — no need to hold
+      // again, start dragging this one right away.
+      setDragSemester(key);
+      return;
+    }
     holdTimerRef.current = setTimeout(() => {
       setReorderingSemesters(true);
+      setDragSemester(key);
     }, REORDER_HOLD_MS);
   }
 
@@ -99,43 +123,76 @@ export default function ClassSidebar({
 
   function clearDrag() {
     setDragSemester(null);
-    setDropIndicator(null);
+    setDropIndicatorBoth(null);
   }
 
-  // Hovering over a group while dragging: figure out whether the pointer is
-  // in the top or bottom half of that group, so the drop line renders
-  // above or below it accordingly (rather than always snapping "before").
-  function handleSemesterDragOver(e, key) {
-    if (!reorderingSemesters || !dragSemester) return;
-    e.preventDefault();
-    if (key === dragSemester) {
-      setDropIndicator(null);
-      return;
-    }
-    const rect = e.currentTarget.getBoundingClientRect();
-    const before = e.clientY < rect.top + rect.height / 2;
-    setDropIndicator({ key, position: before ? "before" : "after" });
-  }
+  // While a drag is active, track the pointer on the whole window (not just
+  // the element under the cursor) so the drag keeps working even if the
+  // pointer briefly leaves a header while moving between rows.
+  useEffect(() => {
+    if (!dragSemester) return;
 
-  function handleSemesterDrop(targetKey) {
-    if (!dragSemester || dragSemester === targetKey) {
-      clearDrag();
-      return;
+    function hitTest(clientX, clientY) {
+      const el = document.elementFromPoint(clientX, clientY)?.closest("[data-semester-key]");
+      if (!el) {
+        setDropIndicatorBoth(null);
+        return;
+      }
+      const key = el.dataset.semesterKey;
+      if (key === dragSemester) {
+        setDropIndicatorBoth(null);
+        return;
+      }
+      const rect = el.getBoundingClientRect();
+      const before = clientY < rect.top + rect.height / 2;
+      setDropIndicatorBoth({ key, position: before ? "before" : "after" });
     }
-    const order = [...semesters];
-    const from = order.indexOf(dragSemester);
-    let to = order.indexOf(targetKey);
-    if (from === -1 || to === -1) {
+
+    function commitDrop() {
+      const indicator = dropIndicatorRef.current;
+      if (indicator) {
+        const order = [...semesters];
+        const from = order.indexOf(dragSemester);
+        let to = order.indexOf(indicator.key);
+        if (from !== -1 && to !== -1) {
+          order.splice(from, 1);
+          if (to > from) to -= 1;
+          const insertAt = indicator.position === "after" ? to + 1 : to;
+          order.splice(insertAt, 0, dragSemester);
+          onReorderSemesters(order);
+        }
+      }
       clearDrag();
-      return;
     }
-    order.splice(from, 1);
-    if (to > from) to -= 1;
-    const insertAt = dropIndicator && dropIndicator.position === "after" ? to + 1 : to;
-    order.splice(insertAt, 0, dragSemester);
-    onReorderSemesters(order);
-    clearDrag();
-  }
+
+    function onMouseMove(e) {
+      hitTest(e.clientX, e.clientY);
+    }
+    function onMouseUp() {
+      commitDrop();
+    }
+    function onTouchMove(e) {
+      const t = e.touches[0];
+      if (!t) return;
+      e.preventDefault();
+      hitTest(t.clientX, t.clientY);
+    }
+    function onTouchEnd() {
+      commitDrop();
+    }
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onTouchEnd);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dragSemester, semesters]);
 
   useEffect(() => cancelHold, []);
 
@@ -315,26 +372,29 @@ export default function ClassSidebar({
                 {showLineBefore && <div className="semester-drop-line" />}
                 <div
                   className={`semester-group ${isSemesterActive ? "active" : ""} ${isDragging ? "dragging" : ""}`}
-                  onDragOver={(e) => handleSemesterDragOver(e, group.key)}
-                  onDrop={() => handleSemesterDrop(group.key)}
+                  data-semester-key={group.key}
                 >
                 <div
-                  className="semester-group-header"
+                  className={`semester-group-header ${reorderingSemesters ? "reordering" : ""}`}
                   onClick={() => {
                     if (!reorderingSemesters) handleSemesterHeaderClick(group.key);
                   }}
-                  onMouseDown={() => startHold(group.key, group.managed)}
+                  onMouseDown={(e) => {
+                    // Prevents the browser's default text-selection drag —
+                    // without this, holding and moving the mouse selects
+                    // the semester/class names underneath instead of
+                    // dragging the row.
+                    if (group.managed) e.preventDefault();
+                    startHold(group.key, group.managed);
+                  }}
                   onMouseUp={cancelHold}
                   onMouseLeave={cancelHold}
                   onTouchStart={() => startHold(group.key, group.managed)}
                   onTouchEnd={cancelHold}
                   onTouchMove={cancelHold}
-                  draggable={reorderingSemesters && group.managed}
-                  onDragStart={() => setDragSemester(group.key)}
-                  onDragEnd={clearDrag}
                   title={
                     reorderingSemesters
-                      ? "Drag to reorder"
+                      ? "Press and drag to reorder"
                       : "Click to view GPA/QPA — press and hold to reorder"
                   }
                 >

@@ -1003,10 +1003,19 @@ header h1 {
   margin-bottom: 4px;
   border-radius: 6px;
   cursor: pointer;
+  user-select: none;
 }
 
 .semester-group-header:hover {
   background: var(--accent-bg);
+}
+
+.semester-group-header.reordering {
+  cursor: grab;
+}
+
+.semester-group.dragging .semester-group-header {
+  cursor: grabbing;
 }
 
 .semester-caret-btn {
@@ -1408,17 +1417,95 @@ header h1 {
 
 .add-past-class-form {
   display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.add-past-class-semester-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 0 0 180px;
+}
+
+.add-past-class-semester-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.add-past-class-rows-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.add-past-class-row-header {
+  display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+}
+
+.add-past-class-row-header-spacer {
+  flex: 0 0 auto;
+  width: 28px;
+}
+
+.add-past-class-name-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.add-past-class-letter-label {
+  flex: 0 0 auto;
+  width: 60px;
+}
+
+.add-past-class-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .add-past-class-name {
-  min-width: 160px;
+  flex: 1;
+  min-width: 0;
 }
 
 .add-past-class-credits {
   width: 64px;
+  flex: 0 0 auto;
+}
+
+.add-past-class-letter {
+  width: 60px;
+  flex: 0 0 auto;
+}
+
+.add-past-class-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+@media (max-width: 640px) {
+  .add-past-class-form {
+    flex-direction: column;
+  }
+
+  .add-past-class-semester-col {
+    flex: 1 1 auto;
+    width: 100%;
+  }
 }
 
 .overview-manual-input,
