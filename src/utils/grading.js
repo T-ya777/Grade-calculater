@@ -183,6 +183,19 @@ export const SCALE_PRESETS = {
 
 export const DEFAULT_SCALE = SCALE_PRESETS.standard.scale;
 
+// Pass/No Pass letters are always offered as an option for a manually
+// entered class, even if the scale in question isn't the Pass/No Pass
+// preset — a class might genuinely have been graded that way regardless of
+// what the default (or that class's own) scale is set to. Shared by the
+// Overview page and the Semester page, since both let you add/edit manual
+// classes.
+export function withPassNoPass(scale) {
+  const extra = SCALE_PRESETS.passNoPass.scale.filter(
+    (pnp) => !scale.some((s) => s.letter === pnp.letter)
+  );
+  return [...scale, ...extra];
+}
+
 export function letterForScore(score, scale) {
   if (score === null || score === undefined || Number.isNaN(score)) return "—";
   const sorted = [...scale].sort((a, b) => b.min - a.min);

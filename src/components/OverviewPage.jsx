@@ -4,7 +4,7 @@ import {
   computeSemesterGpa,
   computeEffectiveGpa,
   letterForScore,
-  SCALE_PRESETS,
+  withPassNoPass,
 } from "../utils/grading";
 import { groupProfilesBySemester, loadWhatIfOverrides, saveWhatIfOverrides } from "../utils/storage";
 
@@ -25,17 +25,6 @@ function loadCollapsedSemesters() {
   } catch {
     return new Set();
   }
-}
-
-// Pass/No Pass letters are always offered as an option for a past class,
-// even if your current default grade scale isn't the Pass/No Pass preset —
-// a class you already took might have been graded that way regardless of
-// what your scale is set to now.
-function withPassNoPass(scale) {
-  const extra = SCALE_PRESETS.passNoPass.scale.filter(
-    (pnp) => !scale.some((s) => s.letter === pnp.letter)
-  );
-  return [...scale, ...extra];
 }
 
 function loadLastManualSemester() {

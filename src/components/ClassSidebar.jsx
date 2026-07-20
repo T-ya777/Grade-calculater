@@ -534,7 +534,9 @@ export default function ClassSidebar({
                               title="Delete class"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                onDelete(p.id);
+                                if (window.confirm(`Delete "${p.name}"? This can't be undone.`)) {
+                                  onDelete(p.id);
+                                }
                               }}
                             >
                               ✕

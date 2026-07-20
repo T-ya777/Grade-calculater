@@ -543,6 +543,9 @@ export default function App() {
                 settings={settings}
                 onSelectClass={selectClass}
                 onToggleInclude={toggleIncludeInGpa}
+                onAddManualClass={addManualClass}
+                onUpdateManualClass={updateManualClass}
+                onDeleteManualClass={deleteManualClass}
               />
             </main>
           </>
