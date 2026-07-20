@@ -1311,14 +1311,31 @@ header h1 {
   width: 100%;
 }
 
+/* Spacing between blocks is driven by each block's own margin-bottom (the
+   gap AFTER it), not by the next block's margin-top — so how tight a
+   collapsed row looks never depends on whether the block after it happens
+   to be collapsed too. Each block always keeps its own top divider
+   (border-top + padding-top) as a fixed, unconditional visual separator. */
 .overview-semester-block {
-  margin-top: 20px;
   padding-top: 16px;
   border-top: 1px solid var(--border);
+  margin-bottom: 20px;
 }
 
 .overview-semester-block:first-of-type {
   margin-top: 16px;
+}
+
+.overview-semester-block:last-of-type {
+  margin-bottom: 0;
+}
+
+/* Collapsed blocks have no table underneath — the normal spacing (meant to
+   separate one semester's whole card of data from the next) reads as an
+   oversized gap around a single line, so tighten it up. */
+.overview-semester-block.collapsed {
+  padding-top: 4px;
+  margin-bottom: 4px;
 }
 
 .overview-semester-header {
@@ -1336,8 +1353,31 @@ header h1 {
   text-align: left;
 }
 
+.overview-semester-block.collapsed .overview-semester-header {
+  margin-bottom: 0;
+}
+
 .overview-semester-header:hover {
   background: var(--accent-bg);
+}
+
+.overview-semester-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.overview-semester-caret {
+  flex: 0 0 auto;
+  font-size: 11px;
+  color: var(--muted);
+  width: 14px;
+  text-align: center;
+}
+
+.overview-semester-caret:hover {
+  color: var(--accent);
 }
 
 .overview-semester-name {

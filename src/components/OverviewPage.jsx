@@ -16,6 +16,16 @@ const LAST_MANUAL_SEMESTER_KEY = "grade-calculator-last-manual-semester";
 // no real semester is ever literally named this, same trick as
 // NEW_SEMESTER_OPTION above.
 const OVERVIEW_WHATIF_KEY = "__overview__";
+const COLLAPSED_SEMESTERS_KEY = "grade-calculator-overview-collapsed-semesters";
+
+function loadCollapsedSemesters() {
+  try {
+    const raw = localStorage.getItem(COLLAPSED_SEMESTERS_KEY);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
 
 // Pass/No Pass letters are always offered as an option for a past class,
 // even if your current default grade scale isn't the Pass/No Pass preset —
@@ -235,6 +245,29 @@ export default function OverviewPage({
   const [editingManual, setEditingManual] = useState(false);
   const [noteProfile, setNoteProfile] = useState(null);
 
+  // Each semester block can be minimized independently — collapses the
+  // breakdown table underneath while keeping the GPA/QPA/units summary
+  // line visible in the header. Persisted so it stays collapsed on reload,
+  // same pattern as the sidebar's expanded-semesters state.
+  const [collapsedSemesters, setCollapsedSemesters] = useState(loadCollapsedSemesters);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(COLLAPSED_SEMESTERS_KEY, JSON.stringify([...collapsedSemesters]));
+    } catch {
+      // ignore
+    }
+  }, [collapsedSemesters]);
+
+  function toggleSemesterCollapsed(name) {
+    setCollapsedSemesters((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+  }
+
   // What-If mode, app-wide version of the one on the Semester page: pick a
   // hypothetical letter for any class (real or manual, from any semester)
   // and see cumulative GPA/QPA recompute live, without touching real data.
@@ -385,15 +418,32 @@ export default function OverviewPage({
               ? computeEffectiveGpa(group.profiles, settings.gradePoints, overrides)
               : computeSemesterGpa(group.profiles, settings.gradePoints);
             const semesterUnits = rows.reduce((sum, r) => sum + (Number(r.credits) || 0), 0);
+            const isCollapsed = collapsedSemesters.has(group.name);
             return (
-              <div key={group.name} className="overview-semester-block">
-                <button
-                  type="button"
+              <div className={`overview-semester-block ${isCollapsed ? "collapsed" : ""}`} key={group.name}>
+                <div
                   className="overview-semester-header"
                   onClick={() => onSelectSemester(group.name)}
                   title="Open this semester's page"
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") onSelectSemester(group.name);
+                  }}
                 >
-                  <span className="overview-semester-name">{group.name}</span>
+                  <span className="overview-semester-title">
+                    <span
+                      className="overview-semester-caret"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleSemesterCollapsed(group.name);
+                      }}
+                      title={isCollapsed ? "Expand" : "Minimize"}
+                    >
+                      {isCollapsed ? "▸" : "▾"}
+                    </span>
+                    <span className="overview-semester-name">{group.name}</span>
+                  </span>
                   <span className="overview-semester-gpa">
                     {showGpa && `GPA ${gpa === null ? "—" : gpa.toFixed(2)}`}
                     {showGpa && showQpa && "  ·  "}
@@ -401,8 +451,9 @@ export default function OverviewPage({
                     {(showGpa || showQpa) && "  ·  "}
                     {semesterUnits} units
                   </span>
-                </button>
+                </div>
 
+                {!isCollapsed && (
                 <table className="breakdown-table">
                   <thead>
                     <tr>
@@ -570,6 +621,7 @@ export default function OverviewPage({
                     })}
                   </tbody>
                 </table>
+                )}
               </div>
             );
           })}
