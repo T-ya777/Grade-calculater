@@ -1,9 +1,32 @@
-import { useState } from "react";
-import { computeOverall, computeSemesterGpa, letterForScore } from "../utils/grading";
-import { groupProfilesBySemester } from "../utils/storage";
+import { useEffect, useMemo, useState } from "react";
+import {
+  computeOverall,
+  computeSemesterGpa,
+  computeEffectiveGpa,
+  letterForScore,
+  SCALE_PRESETS,
+} from "../utils/grading";
+import { groupProfilesBySemester, loadWhatIfOverrides, saveWhatIfOverrides } from "../utils/storage";
 
 const NEW_SEMESTER_OPTION = "__new_semester__";
 const LAST_MANUAL_SEMESTER_KEY = "grade-calculator-last-manual-semester";
+// Reserved key for the Overview page's own What-If overrides, stored
+// alongside the per-semester ones in the same localStorage blob (see
+// loadWhatIfOverrides/saveWhatIfOverrides in storage.js) — safe as long as
+// no real semester is ever literally named this, same trick as
+// NEW_SEMESTER_OPTION above.
+const OVERVIEW_WHATIF_KEY = "__overview__";
+
+// Pass/No Pass letters are always offered as an option for a past class,
+// even if your current default grade scale isn't the Pass/No Pass preset —
+// a class you already took might have been graded that way regardless of
+// what your scale is set to now.
+function withPassNoPass(scale) {
+  const extra = SCALE_PRESETS.passNoPass.scale.filter(
+    (pnp) => !scale.some((s) => s.letter === pnp.letter)
+  );
+  return [...scale, ...extra];
+}
 
 function loadLastManualSemester() {
   try {
@@ -41,14 +64,15 @@ function AddPastClassForm({ semesters, defaultScale, onAdd, onAddSemester }) {
   const [creatingSemester, setCreatingSemester] = useState(semesters.length === 0);
   const [newSemesterName, setNewSemesterName] = useState("");
   const [credits, setCredits] = useState(3);
-  const [letter, setLetter] = useState(defaultScale[0]?.letter || "");
+  const letterOptions = withPassNoPass(defaultScale);
+  const [letter, setLetter] = useState(letterOptions[0]?.letter || "");
 
   function reset() {
     setName("");
     setCreatingSemester(false);
     setNewSemesterName("");
     setCredits(3);
-    setLetter(defaultScale[0]?.letter || "");
+    setLetter(letterOptions[0]?.letter || "");
     setOpen(false);
     // semester intentionally left as-is, so the next add defaults to it
   }
@@ -133,7 +157,7 @@ function AddPastClassForm({ semesters, defaultScale, onAdd, onAddSemester }) {
         onChange={(e) => setCredits(e.target.value === "" ? "" : Number(e.target.value))}
       />
       <select value={letter} onChange={(e) => setLetter(e.target.value)}>
-        {defaultScale.map((s) => (
+        {letterOptions.map((s) => (
           <option key={s.letter} value={s.letter}>
             {s.letter}
           </option>
@@ -200,20 +224,8 @@ export default function OverviewPage({
   const showGpa = settings.gpaDisplay !== "qpa";
   const showQpa = settings.gpaDisplay !== "gpa";
 
-  const cumulative = computeSemesterGpa(profiles, settings.gradePoints);
+  const real = computeSemesterGpa(profiles, settings.gradePoints);
   const groups = groupProfilesBySemester(profiles, semesters);
-
-  // Total units across every semester, plus whatever transfer credit was
-  // entered in Settings. Feeds the degree-progress bar below — units count
-  // regardless of GPA inclusion, same reasoning as the semester page.
-  const totalUnitsEarned = cumulative.rows.reduce((sum, r) => sum + (Number(r.credits) || 0), 0);
-  const transferUnits = Number(settings.transferUnits) || 0;
-  const unitsTowardDegree = totalUnitsEarned + transferUnits;
-  const unitsNeeded = settings.totalUnitsNeeded;
-  const hasProgressGoal = unitsNeeded !== null && unitsNeeded !== undefined && unitsNeeded > 0;
-  const progressPct = hasProgressGoal
-    ? Math.min(100, Math.round((unitsTowardDegree / unitsNeeded) * 100))
-    : 0;
   const hasManualClasses = profiles.some((p) => p.isManual);
   // Manual classes aren't editable by default — there's rarely a reason to
   // touch one again once it's entered. This toggle switches every manual
@@ -222,6 +234,57 @@ export default function OverviewPage({
   // something that's usually set-and-forget.
   const [editingManual, setEditingManual] = useState(false);
   const [noteProfile, setNoteProfile] = useState(null);
+
+  // What-If mode, app-wide version of the one on the Semester page: pick a
+  // hypothetical letter for any class (real or manual, from any semester)
+  // and see cumulative GPA/QPA recompute live, without touching real data.
+  // Shares the math (computeEffectiveGpa) and the persistence pattern
+  // (loadWhatIfOverrides/saveWhatIfOverrides) with the Semester page.
+  const [whatIf, setWhatIf] = useState(false);
+  const [overrides, setOverrides] = useState(() => loadWhatIfOverrides(OVERVIEW_WHATIF_KEY));
+
+  useEffect(() => {
+    saveWhatIfOverrides(OVERVIEW_WHATIF_KEY, overrides);
+  }, [overrides]);
+
+  const cumulative = useMemo(() => {
+    if (!whatIf) return real;
+    return computeEffectiveGpa(profiles, settings.gradePoints, overrides);
+  }, [whatIf, overrides, real, profiles, settings.gradePoints]);
+
+  function setOverride(id, letter) {
+    setOverrides((prev) => {
+      const next = { ...prev };
+      if (!letter) delete next[id];
+      else next[id] = letter;
+      return next;
+    });
+  }
+
+  function toggleWhatIf() {
+    setWhatIf((prev) => !prev);
+    setEditingManual(false); // don't allow editing and hypothetical-picking at the same time
+  }
+
+  function resetOverrides() {
+    setOverrides({});
+  }
+
+  const hasOverrides = Object.keys(overrides).length > 0;
+
+  // Total units across every semester, plus whatever transfer credit was
+  // entered in Settings. Feeds the degree-progress bar below — units count
+  // regardless of GPA inclusion, same reasoning as the semester page.
+  // Units themselves aren't affected by What-If (only grades are), so this
+  // always reads off the real numbers even while What-If is active.
+  const totalUnitsEarned = real.rows.reduce((sum, r) => sum + (Number(r.credits) || 0), 0);
+  const transferUnits = Number(settings.transferUnits) || 0;
+  const unitsTowardDegree = totalUnitsEarned + transferUnits;
+  const unitsNeeded = settings.totalUnitsNeeded;
+  const hasProgressGoal = unitsNeeded !== null && unitsNeeded !== undefined && unitsNeeded > 0;
+  const progressPct = hasProgressGoal
+    ? Math.min(100, Math.round((unitsTowardDegree / unitsNeeded) * 100))
+    : 0;
 
   function deleteManual(p) {
     if (window.confirm(`Remove "${p.name}" from your records? This can't be undone.`)) {
@@ -242,7 +305,7 @@ export default function OverviewPage({
           Already finished a semester and don't want to enter every assignment? Just record the
           credits and final letter grade here instead.
         </span>
-        {hasManualClasses && (
+        {hasManualClasses && !whatIf && (
           <button
             type="button"
             className={`add-btn ${editingManual ? "primary" : ""}`}
@@ -252,6 +315,28 @@ export default function OverviewPage({
           </button>
         )}
       </div>
+
+      {profiles.length > 0 && (
+        <div className="what-if-toggle-row">
+          <label className="what-if-toggle">
+            <input type="checkbox" checked={whatIf} onChange={toggleWhatIf} />
+            What-If mode — try different letter grades, for any class in any semester, without
+            changing your real data
+          </label>
+          {whatIf && hasOverrides && (
+            <button type="button" className="what-if-reset-btn" onClick={resetOverrides}>
+              Reset to actual grades
+            </button>
+          )}
+        </div>
+      )}
+
+      {whatIf && (
+        <div className="what-if-banner">
+          You're viewing hypothetical grades — these are never counted toward your real GPA/QPA.
+          Your hypothetical picks are saved, so you can leave and come back to the same setup.
+        </div>
+      )}
 
       {profiles.length === 0 ? (
         <p className="muted small">No classes yet.</p>
@@ -296,7 +381,9 @@ export default function OverviewPage({
           )}
 
           {groups.map((group) => {
-            const { rows, gpa, qpa } = computeSemesterGpa(group.profiles, settings.gradePoints);
+            const { rows, gpa, qpa } = whatIf
+              ? computeEffectiveGpa(group.profiles, settings.gradePoints, overrides)
+              : computeSemesterGpa(group.profiles, settings.gradePoints);
             const semesterUnits = rows.reduce((sum, r) => sum + (Number(r.credits) || 0), 0);
             return (
               <div key={group.name} className="overview-semester-block">
@@ -321,7 +408,7 @@ export default function OverviewPage({
                     <tr>
                       <th>Class</th>
                       <th>Credits</th>
-                      <th>Grade %</th>
+                      {!whatIf && <th>Grade %</th>}
                       <th>Letter</th>
                       <th>GPA Points</th>
                       <th>Counted</th>
@@ -348,6 +435,49 @@ export default function OverviewPage({
                           </button>
                         </td>
                       );
+
+                      // What-If mode: one unified row shape for every class
+                      // (manual or real) — no percentage column (there's
+                      // nothing meaningful to show while previewing a
+                      // hypothetical letter), and the letter itself becomes
+                      // a picker. Editing name/credits/manualLetter for
+                      // real is turned off while What-If is on (see
+                      // toggleWhatIf), so this is the only manual-row shape
+                      // that applies here.
+                      if (whatIf) {
+                        const scale = withPassNoPass(p.scale || settings.defaultScale);
+                        return (
+                          <tr
+                            key={p.id}
+                            className={p.isManual ? "overview-manual-row" : "semester-row-clickable"}
+                            onClick={() => !p.isManual && onSelectClass(p.id)}
+                          >
+                            <td>{p.name}</td>
+                            <td>{p.credits === undefined || p.credits === "" ? "—" : p.credits}</td>
+                            <td onClick={(e) => e.stopPropagation()}>
+                              <select
+                                className={`what-if-letter-select ${row?.isHypothetical ? "hypothetical" : ""}`}
+                                value={overrides[p.id] || ""}
+                                onChange={(e) => setOverride(p.id, e.target.value)}
+                              >
+                                <option value="">{row ? row.letter : "—"}</option>
+                                {scale
+                                  .map((s) => s.letter)
+                                  .filter((letter) => letter !== (row ? row.letter : null))
+                                  .map((letter) => (
+                                    <option key={letter} value={letter}>
+                                      {letter}
+                                    </option>
+                                  ))}
+                              </select>
+                            </td>
+                            <td>{row && row.points !== null ? row.points.toFixed(1) : "—"}</td>
+                            <td>{row && row.included ? "Yes" : "No"}</td>
+                            {noteCell}
+                            <td></td>
+                          </tr>
+                        );
+                      }
 
                       if (p.isManual) {
                         if (!editingManual) {
@@ -396,7 +526,7 @@ export default function OverviewPage({
                                   onUpdateManualClass(p.id, { manualLetter: e.target.value })
                                 }
                               >
-                                {(p.scale || settings.defaultScale).map((s) => (
+                                {withPassNoPass(p.scale || settings.defaultScale).map((s) => (
                                   <option key={s.letter} value={s.letter}>
                                     {s.letter}
                                   </option>

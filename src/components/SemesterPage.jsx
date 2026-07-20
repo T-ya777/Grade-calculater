@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { computeSemesterGpa, pointsForLetter } from "../utils/grading";
+import { computeSemesterGpa, computeEffectiveGpa } from "../utils/grading";
 import { loadWhatIfOverrides, saveWhatIfOverrides } from "../utils/storage";
 
 export default function SemesterPage({ semesterName, profiles, settings, onSelectClass, onToggleInclude }) {
@@ -20,42 +20,12 @@ export default function SemesterPage({ semesterName, profiles, settings, onSelec
 
   const real = computeSemesterGpa(profiles, settings.gradePoints);
 
-  // What-If recompute: same math as computeSemesterGpa, but a class with an
-  // override uses that letter's points instead of its real computed one.
-  // A class you've manually excluded from GPA stays excluded even here —
-  // What-If only lets you try a different grade, not turn on a class you've
-  // chosen to leave out.
+  // What-If recompute — shared with the Overview page's What-If mode, see
+  // computeEffectiveGpa in grading.js.
   const effective = useMemo(() => {
     if (!whatIf) return real;
-
-    let simpleSum = 0;
-    let simpleCount = 0;
-    let creditSum = 0;
-    let creditWeightedSum = 0;
-
-    const rows = real.rows.map((r) => {
-      const override = overrides[r.id];
-      const manuallyExcluded = r.points !== null && r.included === false;
-      const points = override ? pointsForLetter(override, settings.gradePoints) : r.points;
-      const letter = override || r.letter;
-      const included = manuallyExcluded ? false : points !== null;
-
-      if (included) {
-        simpleSum += points;
-        simpleCount += 1;
-        creditSum += r.credits;
-        creditWeightedSum += points * r.credits;
-      }
-
-      return { ...r, letter, points, included, isHypothetical: Boolean(override) };
-    });
-
-    return {
-      rows,
-      gpa: simpleCount > 0 ? simpleSum / simpleCount : null,
-      qpa: creditSum > 0 ? creditWeightedSum / creditSum : null,
-    };
-  }, [whatIf, overrides, real, settings.gradePoints]);
+    return computeEffectiveGpa(profiles, settings.gradePoints, overrides);
+  }, [whatIf, overrides, real, profiles, settings.gradePoints]);
 
   function setOverride(id, letter) {
     setOverrides((prev) => {

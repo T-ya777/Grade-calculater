@@ -359,7 +359,61 @@ export function computeSemesterGpa(classProfiles, gradePoints) {
       creditWeightedSum += points * credits;
     }
 
-    return { id: p.id, name: p.name, letter, points, credits, included, isManual: !!p.isManual };
+    return {
+      id: p.id,
+      name: p.name,
+      letter,
+      points,
+      credits,
+      included,
+      isManual: !!p.isManual,
+      excludedByChoice,
+    };
+  });
+
+  return {
+    rows,
+    gpa: simpleCount > 0 ? simpleSum / simpleCount : null,
+    qpa: creditSum > 0 ? creditWeightedSum / creditSum : null,
+  };
+}
+
+/**
+ * What-If recompute, shared by the Semester page and the Overview page.
+ * Starts from computeSemesterGpa's real numbers, then swaps in a
+ * hypothetical letter for any class with an override — a class you've
+ * manually excluded from GPA stays excluded even here; What-If only lets
+ * you try a different grade, not turn on a class you've chosen to leave
+ * out. `overrides` is `{ [classId]: hypothetical letter }`.
+ */
+export function computeEffectiveGpa(classProfiles, gradePoints, overrides) {
+  const real = computeSemesterGpa(classProfiles, gradePoints);
+  if (!overrides || Object.keys(overrides).length === 0) return real;
+
+  let simpleSum = 0;
+  let simpleCount = 0;
+  let creditSum = 0;
+  let creditWeightedSum = 0;
+
+  const rows = real.rows.map((r) => {
+    const override = overrides[r.id];
+    const manuallyExcluded = r.excludedByChoice;
+    // A manually-excluded class can still show a hypothetical letter (so
+    // you can preview it), but it never counts toward the sums below —
+    // What-If only lets you try a different grade, not turn on a class
+    // you've chosen to leave out.
+    const points = manuallyExcluded ? null : override ? pointsForLetter(override, gradePoints) : r.points;
+    const letter = override || r.letter;
+    const included = manuallyExcluded ? false : points !== null;
+
+    if (included) {
+      simpleSum += points;
+      simpleCount += 1;
+      creditSum += r.credits;
+      creditWeightedSum += points * r.credits;
+    }
+
+    return { ...r, letter, points, included, isHypothetical: Boolean(override) };
   });
 
   return {
