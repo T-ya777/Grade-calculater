@@ -4,6 +4,8 @@ A local, browser-based grade calculator built to replace tracking class grades b
 Excel. Everything runs client-side (React + Vite) and saves to the browser's `localStorage` —
 there's no server and no account.
 
+live sample: https://t-ya777.github.io/Grade-calculater/
+
 ## Features
 
 **Per-class grade tracking**
