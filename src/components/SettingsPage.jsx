@@ -71,6 +71,47 @@ export default function SettingsPage({
 
   return (
     <div className="card settings-page">
+      <details className="settings-section" open>
+        <summary>Appearance</summary>
+        <p className="muted small">
+          Purely visual — switching styles never changes your grades, categories, or any other
+          data. Applies everywhere in the app right away.
+        </p>
+
+        <div className="theme-option-list">
+          <label className={`theme-option ${settings.theme !== "editorial" ? "selected" : ""}`}>
+            <input
+              type="radio"
+              name="theme"
+              checked={settings.theme !== "editorial"}
+              onChange={() => onChange({ theme: "default" })}
+            />
+            <span className="theme-option-swatch theme-swatch-default" aria-hidden="true" />
+            <span className="theme-option-body">
+              <span className="theme-option-name">Default</span>
+              <span className="muted small">The app's normal look.</span>
+            </span>
+          </label>
+
+          <label className={`theme-option ${settings.theme === "editorial" ? "selected" : ""}`}>
+            <input
+              type="radio"
+              name="theme"
+              checked={settings.theme === "editorial"}
+              onChange={() => onChange({ theme: "editorial" })}
+            />
+            <span className="theme-option-swatch theme-swatch-editorial" aria-hidden="true" />
+            <span className="theme-option-body">
+              <span className="theme-option-name">Editorial Academic</span>
+              <span className="muted small">
+                Newsprint paper, ink borders, serif headers, monospace figures — styled like a
+                printed transcript.
+              </span>
+            </span>
+          </label>
+        </div>
+      </details>
+
       <details className="settings-section">
         <summary>Default grade scale</summary>
         <p className="muted small">

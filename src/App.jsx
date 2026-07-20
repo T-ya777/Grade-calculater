@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import "./App.css";
+import "./editorial-theme.css";
 import ClassSidebar from "./components/ClassSidebar";
 import CategoryCard from "./components/CategoryCard";
 import SummaryPanel from "./components/SummaryPanel";
@@ -101,6 +102,15 @@ export default function App() {
   useEffect(() => {
     document.title = active ? `${active.name} — Grade Calculator` : "Grade Calculator";
   }, [active?.name]);
+
+  // Applies the chosen visual theme by setting a data attribute on <html>,
+  // which editorial-theme.css keys off of. Pure presentation — set on the
+  // document root (not just the app shell) so it also reaches things like
+  // the modal overlay, which portals aren't used for here but keeps this
+  // robust either way.
+  useEffect(() => {
+    if (settings) document.documentElement.dataset.theme = settings.theme || "default";
+  }, [settings?.theme]);
 
   // Grade preview for every class, used by the sidebar so all classes are visible at once.
   const gradesByClass = useMemo(() => {

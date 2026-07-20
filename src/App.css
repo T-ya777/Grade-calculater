@@ -1381,10 +1381,6 @@ header h1 {
   width: 64px;
 }
 
-.overview-manual-row {
-  background: var(--accent-bg);
-}
-
 .overview-manual-input,
 .overview-manual-select {
   width: 100%;
@@ -1438,6 +1434,63 @@ header h1 {
   gap: 12px;
   margin-top: 12px;
   flex-wrap: wrap;
+}
+
+.theme-option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.theme-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.theme-option.selected {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.theme-option input[type="radio"] {
+  margin: 0;
+}
+
+.theme-option-swatch {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+/* Hardcoded to each theme's real palette (not CSS vars) so the swatch
+   previews what you're picking regardless of which theme is currently active. */
+.theme-swatch-default {
+  background: linear-gradient(135deg, #f7f7f9 50%, #6b4de6 50%);
+}
+
+.theme-swatch-editorial {
+  background: linear-gradient(135deg, #faf9f5 50%, #15803d 50%);
+  border-radius: 0;
+  border-color: #1a1a1a;
+}
+
+.theme-option-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.theme-option-name {
+  font-weight: 600;
+  font-size: 14px;
 }
 
 .feedback-textarea {
@@ -1656,9 +1709,12 @@ header h1 {
 
 .degree-progress-fill {
   height: 100%;
+  width: 100%;
   background: var(--accent);
   border-radius: 4px;
-  transition: width 0.2s ease;
+  transform: scaleX(var(--progress, 0));
+  transform-origin: left;
+  transition: transform 0.2s ease;
 }
 
 .add-btn.primary {

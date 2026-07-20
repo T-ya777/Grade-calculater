@@ -1,0 +1,401 @@
+/*
+ * Editorial Academic theme — an alternate visual style, toggled from
+ * Settings → Appearance (see storage.js `settings.theme` and the
+ * `data-theme` attribute App.jsx sets on <html>).
+ *
+ * This file is PURE presentation. It never touches component logic, props,
+ * or state — every rule here is scoped under `[data-theme="editorial"]`, so
+ * with the attribute absent (the default theme) none of this applies at
+ * all. The look: warm newsprint paper, deep ink borders, serif italic
+ * headers, uppercase tracked labels, monospace figures — styled like a
+ * printed academic transcript rather than a SaaS dashboard. No gradients,
+ * no glassmorphism, no rounded pills, no drop shadows — see
+ * https://impeccable.style/ for the anti-pattern list this deliberately
+ * avoids.
+ *
+ * Almost everything in App.css/index.css already flows through CSS custom
+ * properties (--bg, --card-bg, --border, --accent, --text, --muted, etc.),
+ * so section 1 below (a palette swap) does most of the work for free.
+ * Sections 2+ handle the things variables can't reach: border-radius,
+ * box-shadow, font-family, border weight, and a handful of hardcoded hex
+ * colors that don't go through the variable system.
+ */
+
+/* ============================================================
+   1. Palette — overrides the variables defined in index.css
+   ============================================================ */
+:root[data-theme="editorial"] {
+  --text: #1a1a1a;
+  --text-h: #1a1a1a;
+  --bg: #faf9f5;
+  --card-bg: #fbf9f4;
+  --border: #e5e2d9;
+  --accent: #15803d;
+  --accent-bg: rgba(21, 128, 61, 0.08);
+  --danger: #9a3412;
+  --muted: #6b6656;
+
+  --editorial-ink: #1a1a1a;
+  --editorial-border-strong: #d5d0c3;
+  --editorial-divider: #efece6;
+  --editorial-serif: "EB Garamond", Georgia, "Times New Roman", serif;
+  --editorial-mono: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+/* ============================================================
+   2. Global structure — zero rounded corners, zero drop shadows
+   ============================================================ */
+[data-theme="editorial"] .card,
+[data-theme="editorial"] button,
+[data-theme="editorial"] input,
+[data-theme="editorial"] select,
+[data-theme="editorial"] textarea,
+[data-theme="editorial"] .modal-box,
+[data-theme="editorial"] .three-dot-dropdown,
+[data-theme="editorial"] .class-chip,
+[data-theme="editorial"] .semester-caret-label,
+[data-theme="editorial"] .credits-badge,
+[data-theme="editorial"] .days-badge,
+[data-theme="editorial"] .final-exam-badge,
+[data-theme="editorial"] .warning,
+[data-theme="editorial"] .gpa-toggle,
+[data-theme="editorial"] .theme-option,
+[data-theme="editorial"] .theme-option-swatch,
+[data-theme="editorial"] .degree-progress-track,
+[data-theme="editorial"] .degree-progress-fill,
+[data-theme="editorial"] .hypothetical-banner,
+[data-theme="editorial"] .what-if-banner,
+[data-theme="editorial"] .semester-reorder-banner {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Letter grade circle stays circular — it reads as an academic seal/stamp
+   on a transcript, which fits the theme rather than fighting it. */
+[data-theme="editorial"] .letter-circle {
+  border-radius: 50% !important;
+}
+
+[data-theme="editorial"] * {
+  box-shadow: none !important;
+}
+
+/* ============================================================
+   3. Typography
+   ============================================================ */
+
+/* Section/component headers: serif italic. */
+[data-theme="editorial"] header h1,
+[data-theme="editorial"] .card-header h2,
+[data-theme="editorial"] .summary-card-header h2,
+[data-theme="editorial"] .final-exam-header h2,
+[data-theme="editorial"] .late-days-header h2,
+[data-theme="editorial"] .class-info-section-label,
+[data-theme="editorial"] .overview-semester-name,
+[data-theme="editorial"] .semester-group-label,
+[data-theme="editorial"] .modal-box h3,
+[data-theme="editorial"] .settings-section summary,
+[data-theme="editorial"] .settings-page > h1,
+[data-theme="editorial"] .category-name {
+  font-family: var(--editorial-serif);
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+/* Table labels / section labels: uppercase, tracked, small sans. */
+[data-theme="editorial"] .summary-label,
+[data-theme="editorial"] .breakdown-table th,
+[data-theme="editorial"] .scale-table th,
+[data-theme="editorial"] .assignments-table th,
+[data-theme="editorial"] .notes-label,
+[data-theme="editorial"] .late-policy-label,
+[data-theme="editorial"] .class-info-section-label,
+[data-theme="editorial"] .remaining-label {
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* Data / figures: monospace, for academic-transcript alignment. */
+[data-theme="editorial"] .breakdown-table td,
+[data-theme="editorial"] .assignments-table td,
+[data-theme="editorial"] .summary-score,
+[data-theme="editorial"] .letter-circle-letter,
+[data-theme="editorial"] .letter-circle-pct,
+[data-theme="editorial"] .mini-letter,
+[data-theme="editorial"] .mini-pct,
+[data-theme="editorial"] .mini-credits,
+[data-theme="editorial"] .credits-badge,
+[data-theme="editorial"] .days-badge,
+[data-theme="editorial"] .remaining-number,
+[data-theme="editorial"] .degree-progress-label,
+[data-theme="editorial"] .overview-semester-gpa,
+[data-theme="editorial"] .semester-gpa-block .summary-score,
+[data-theme="editorial"] .what-if-letter-select {
+  font-family: var(--editorial-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Body copy (everything not covered above) reads better as a plain
+   humanist serif than the base sans, matching the newsprint feel. */
+[data-theme="editorial"] {
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+[data-theme="editorial"] .add-btn,
+[data-theme="editorial"] .icon-btn,
+[data-theme="editorial"] .three-dot-item,
+[data-theme="editorial"] select,
+[data-theme="editorial"] input,
+[data-theme="editorial"] textarea,
+[data-theme="editorial"] .muted.small,
+[data-theme="editorial"] .what-if-toggle {
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+}
+
+/* ============================================================
+   4. Borders & dividers — strong ink rules, thin print dividers
+   ============================================================ */
+[data-theme="editorial"] header {
+  padding-bottom: 14px;
+}
+
+[data-theme="editorial"] .card {
+  border: 1px solid var(--editorial-border-strong);
+}
+
+/* No underline rule here — keeps card headers (Summary, category cards,
+   Final Exam Calculator, Late Days) quieter, relying on the serif italic
+   title alone for hierarchy instead of a heavy ink line under every card. */
+[data-theme="editorial"] .card-header,
+[data-theme="editorial"] .summary-card-header,
+[data-theme="editorial"] .final-exam-header,
+[data-theme="editorial"] .late-days-header {
+  padding-bottom: 10px;
+}
+
+[data-theme="editorial"] .breakdown-table th,
+[data-theme="editorial"] .assignments-table th,
+[data-theme="editorial"] .scale-table th {
+  border-bottom: 2px solid var(--editorial-ink) !important;
+  padding-bottom: 8px;
+}
+
+[data-theme="editorial"] .breakdown-table td,
+[data-theme="editorial"] .assignments-table td,
+[data-theme="editorial"] .scale-table td {
+  border-bottom: 1px solid var(--editorial-divider) !important;
+}
+
+[data-theme="editorial"] .breakdown-table tr:last-child td,
+[data-theme="editorial"] .assignments-table tr:last-child td,
+[data-theme="editorial"] .scale-table tr:last-child td {
+  border-bottom: none !important;
+}
+
+[data-theme="editorial"] .overview-semester-header,
+[data-theme="editorial"] .semester-group-header {
+  border-bottom: 1px solid var(--editorial-border-strong);
+}
+
+/* ============================================================
+   5. Inputs — minimalist, bottom-bordered "form" fields
+   ============================================================ */
+[data-theme="editorial"] input,
+[data-theme="editorial"] select,
+[data-theme="editorial"] textarea {
+  border: none;
+  border-bottom: 1px solid var(--editorial-border-strong);
+  border-radius: 0;
+  background: transparent;
+  padding: 5px 2px;
+}
+
+[data-theme="editorial"] input:focus,
+[data-theme="editorial"] select:focus,
+[data-theme="editorial"] textarea:focus {
+  outline: none;
+  border-bottom: 2px solid var(--editorial-ink);
+}
+
+[data-theme="editorial"] textarea {
+  border: 1px solid var(--editorial-border-strong);
+  padding: 8px;
+}
+
+[data-theme="editorial"] textarea:focus {
+  border-color: var(--editorial-ink);
+}
+
+/* ============================================================
+   6. Buttons — sharp, ink-bordered, forest-green primary
+   ============================================================ */
+[data-theme="editorial"] .add-btn {
+  border: 1px solid var(--editorial-ink);
+  background: transparent;
+  color: var(--editorial-ink);
+}
+
+[data-theme="editorial"] .add-btn:hover {
+  background: var(--editorial-ink);
+  color: var(--card-bg);
+}
+
+[data-theme="editorial"] .add-btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fbf9f4;
+}
+
+[data-theme="editorial"] .add-btn.primary:hover {
+  background: #0f5c2c;
+  border-color: #0f5c2c;
+}
+
+[data-theme="editorial"] .add-btn.danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+[data-theme="editorial"] .add-btn.danger:hover {
+  background: var(--danger);
+  color: #fbf9f4;
+}
+
+[data-theme="editorial"] .icon-btn {
+  color: var(--muted);
+}
+
+[data-theme="editorial"] .icon-btn:hover {
+  color: var(--editorial-ink);
+}
+
+[data-theme="editorial"] .icon-btn.danger:hover {
+  color: var(--danger);
+}
+
+/* ============================================================
+   7. Hardcoded-color components — the few spots that don't use
+      the CSS variables above, mapped onto the ink/paper/forest
+      palette instead of the default theme's orange/purple/green.
+   ============================================================ */
+
+/* Hypothetical-score banner + clear button (default: orange #e07b00 family) */
+[data-theme="editorial"] .hypothetical-banner {
+  background: #fbf3e3;
+  border: 1px solid var(--editorial-border-strong);
+  color: #6b4a1a;
+}
+
+[data-theme="editorial"] .hypothetical-clear-btn {
+  border: 1px solid #6b4a1a;
+  color: #6b4a1a;
+  background: transparent;
+}
+
+[data-theme="editorial"] .hypothetical-clear-btn:hover {
+  background: #6b4a1a;
+  color: #fbf9f4;
+}
+
+/* Late Days card warning/remaining states (default: orange/green/gray) */
+[data-theme="editorial"] .late-days-remaining {
+  color: var(--accent);
+}
+
+[data-theme="editorial"] .late-days-remaining.over {
+  color: var(--danger);
+}
+
+[data-theme="editorial"] .no-final-row,
+[data-theme="editorial"] .no-final-toggle {
+  border-color: var(--editorial-border-strong) !important;
+}
+
+/* Final-exam / confirmed styling (default: green #2e7d32) */
+[data-theme="editorial"] .final-exam-badge,
+[data-theme="editorial"] .assignment-row-final .confirmed-cell {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* What-If mode banner + hypothetical letter select (default: orange) */
+[data-theme="editorial"] .what-if-banner {
+  background: #fbf3e3;
+  border: 1px solid var(--editorial-border-strong);
+  color: #6b4a1a;
+}
+
+[data-theme="editorial"] .what-if-reset-btn {
+  border: 1px solid var(--editorial-ink);
+  color: var(--editorial-ink);
+  background: transparent;
+}
+
+[data-theme="editorial"] .what-if-letter-select.hypothetical {
+  border-bottom: 2px solid var(--accent) !important;
+  color: var(--accent);
+}
+
+/* Semester reorder banner (default: purple accent-bg, already inherits via
+   variables, just needs the radius/shadow reset already applied above) */
+
+/* Three-dot dropdown menu shadow (default: soft SaaS drop shadow) */
+[data-theme="editorial"] .three-dot-dropdown {
+  border: 1px solid var(--editorial-ink);
+  background: var(--card-bg);
+}
+
+/* Degree progress bar */
+[data-theme="editorial"] .degree-progress-track {
+  border: 1px solid var(--editorial-border-strong);
+  background: var(--card-bg);
+}
+
+[data-theme="editorial"] .degree-progress-fill {
+  background: var(--accent);
+}
+
+/* Semester drag-to-reorder drop indicator line */
+[data-theme="editorial"] .semester-drop-line {
+  background: var(--accent);
+}
+
+/* Overview page's notes icon — dim until a note exists, same as default,
+   just recolored so it doesn't carry the default theme's purple accent tint. */
+[data-theme="editorial"] .overview-note-btn.has-note {
+  color: var(--accent);
+}
+
+/* Sidebar collapsed chips + avatars: square initials tile instead of a
+   circular avatar, consistent with "no pill/over-rounded" anywhere except
+   the letter-grade seal. */
+[data-theme="editorial"] .class-chip {
+  border: 1px solid var(--editorial-border-strong);
+  background: var(--card-bg);
+  color: var(--editorial-ink);
+}
+
+[data-theme="editorial"] .class-chip.active {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+/* Manual/past-class rows in the sidebar — dashed border reads fine as-is
+   (already var(--border)-based), just confirms the square corners apply. */
+[data-theme="editorial"] .class-sidebar-item-manual {
+  border-style: dashed;
+  border-color: var(--editorial-border-strong);
+}
+
+/* Modal overlay tint, kept neutral ink instead of pure black/blue-black. */
+[data-theme="editorial"] .modal-overlay {
+  background: rgba(26, 26, 26, 0.45);
+}

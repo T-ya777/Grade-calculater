@@ -200,6 +200,11 @@ export function newSettings() {
     // they're just plain settings rather than derived from class data.
     totalUnitsNeeded: null,
     transferUnits: null, // null = empty box, treated as 0 wherever it's used
+    // Visual theme: "default" (the app's normal look) or "editorial" (the
+    // Editorial Academic / newspaper-press alternate style, see
+    // editorial-theme.css). Pure presentation — never read by any grading
+    // or data logic.
+    theme: "default",
   };
 }
 

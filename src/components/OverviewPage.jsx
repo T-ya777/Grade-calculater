@@ -375,7 +375,7 @@ export default function OverviewPage({
                 <span>{progressPct}%</span>
               </div>
               <div className="degree-progress-track">
-                <div className="degree-progress-fill" style={{ width: `${progressPct}%` }} />
+                <div className="degree-progress-fill" style={{ "--progress": progressPct / 100 }} />
               </div>
             </div>
           )}
