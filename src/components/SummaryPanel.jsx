@@ -10,7 +10,7 @@ function withAlpha(hex, alpha) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-export default function SummaryPanel({ overall, scale, onScaleChange, credits, onCreditsChange }) {
+export default function SummaryPanel({ overall, scale, onScaleChange, credits, onCreditsChange, compact }) {
   const { currentGrade, rows, gradedWeightSum, totalWeight } = overall;
   const letter = letterForScore(currentGrade, scale);
   const gradeColor = colorForLetterGrade(letter);
@@ -83,83 +83,91 @@ export default function SummaryPanel({ overall, scale, onScaleChange, credits, o
         </p>
       )}
 
-      <details className="scale-editor">
-        <summary>Edit letter grade cutoffs</summary>
+      {!compact && (
+        <details className="scale-editor">
+          <summary>Edit letter grade cutoffs</summary>
 
-        <label className="scale-preset-label">
-          Quick switch
-          <select
-            defaultValue=""
-            onChange={(e) => {
-              const key = e.target.value;
-              if (key && SCALE_PRESETS[key]) {
-                onScaleChange(SCALE_PRESETS[key].scale);
-              }
-              e.target.value = "";
-            }}
-          >
-            <option value="" disabled>
-              Choose a preset...
-            </option>
-            {Object.entries(SCALE_PRESETS).map(([key, preset]) => (
-              <option key={key} value={key}>
-                {preset.label}
+          <label className="scale-preset-label">
+            Quick switch
+            <select
+              defaultValue=""
+              onChange={(e) => {
+                const key = e.target.value;
+                if (key && SCALE_PRESETS[key]) {
+                  onScaleChange(SCALE_PRESETS[key].scale);
+                }
+                e.target.value = "";
+              }}
+            >
+              <option value="" disabled>
+                Choose a preset...
               </option>
-            ))}
-          </select>
-        </label>
+              {Object.entries(SCALE_PRESETS).map(([key, preset]) => (
+                <option key={key} value={key}>
+                  {preset.label}
+                </option>
+              ))}
+            </select>
+          </label>
 
-        <table className="scale-table">
-          <thead>
-            <tr>
-              <th>Letter</th>
-              <th>Min %</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {scale.map((s, i) => (
-              <tr key={i}>
-                <td>
-                  <input
-                    value={s.letter}
-                    onChange={(e) => {
-                      const next = [...scale];
-                      next[i] = { ...next[i], letter: e.target.value };
-                      onScaleChange(next);
-                    }}
-                  />
-                </td>
-                <td>
-                  <input
-                    type="number"
-                    value={s.min}
-                    onChange={(e) => {
-                      const next = [...scale];
-                      next[i] = { ...next[i], min: Number(e.target.value) };
-                      onScaleChange(next);
-                    }}
-                  />
-                </td>
-                <td>
-                  <button
-                    className="icon-btn danger"
-                    onClick={() => onScaleChange(scale.filter((_, idx) => idx !== i))}
-                  >
-                    ✕
-                  </button>
-                </td>
+          <table className="scale-table">
+            <thead>
+              <tr>
+                <th>Letter</th>
+                <th>Min %</th>
+                <th></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        <button
-          className="add-btn"
-          onClick={() => onScaleChange([...scale, { letter: "New", min: 0 }])}
-        >
-          + Add row
-        </button>
-      </details>
+            </thead>
+            <tbody>
+              {scale.map((s, i) => (
+                <tr key={i}>
+                  <td>
+                    <input
+                      value={s.letter}
+                      onChange={(e) => {
+                        const next = [...scale];
+                        next[i] = { ...next[i], letter: e.target.value };
+                        onScaleChange(next);
+                      }}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      value={s.min}
+                      onChange={(e) => {
+                        const next = [...scale];
+                        next[i] = { ...next[i], min: Number(e.target.value) };
+                        onScaleChange(next);
+                      }}
+                    />
+                  </td>
+                  <td>
+                    <button
+                      className="icon-btn danger"
+                      onClick={() => onScaleChange(scale.filter((_, idx) => idx !== i))}
+                    >
+                      ✕
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <button
+            className="add-btn"
+            onClick={() => onScaleChange([...scale, { letter: "New", min: 0 }])}
+          >
+            + Add row
+          </button>
+        </details>
+      )}
+      {compact && (
+        <p className="muted small compact-scale-note">
+          Grade cutoffs aren't editable in compact layout — switch back to the default layout to
+          change them.
+        </p>
+      )}
     </div>
   );
 }

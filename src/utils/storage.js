@@ -18,6 +18,8 @@ export function newCategory(name = "New Category", opts = {}) {
     dropLowest: 0,
     assignments: [],
     isFinalExam: false,
+    collapsed: false,
+    showLateDays: true,
     ...opts,
   };
 }
@@ -39,8 +41,11 @@ export function migrateProfiles(profiles) {
   return profiles.map((p) => ({
     ...p,
     overviewNote: p.overviewNote ?? "",
+    compactLayout: p.compactLayout ?? false,
     categories: (p.categories || []).map((c) => ({
       ...c,
+      collapsed: c.collapsed ?? false,
+      showLateDays: c.showLateDays ?? true,
       assignments: (c.assignments || []).map((a) =>
         a.confirmed === undefined ? { ...a, confirmed: true } : a
       ),
@@ -138,6 +143,7 @@ export function newClassProfile(name = "New Class", scale = DEFAULT_SCALE) {
     isManual: false,
     manualLetter: null,
     overviewNote: "", // free-text notes/ideas about the class, edited via the Overview page's Notes column popup
+    compactLayout: false, // per-class: denser multi-column class page, toggled from the page's 3-dot menu
   };
 }
 

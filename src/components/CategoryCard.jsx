@@ -13,6 +13,7 @@ export default function CategoryCard({
   onDelete,
   finalExamCategoryId,
   finalExamCategoryName,
+  compact,
 }) {
   // "Manage assignments" mode reveals the delete (✕) column so you can
   // remove assignments — hidden in normal use so the table doesn't have a
@@ -75,10 +76,26 @@ export default function CategoryCard({
   }
 
   const droppedIds = getDroppedAssignmentIds(category);
+  // Minimizing doesn't make sense in the compact layout — it's already the
+  // dense view, and a grid of cards randomly collapsing to different
+  // heights would defeat the point. So compact mode always shows the full
+  // card and hides the arrow, regardless of what's saved in category.collapsed.
+  const collapsed = !compact && !!category.collapsed;
+  const showLateDays = category.showLateDays !== false;
 
   return (
-    <div className="card">
+    <div className={`card ${collapsed ? "card-collapsed" : ""}`}>
       <div className="card-header">
+        {!compact && (
+          <button
+            type="button"
+            className="card-collapse-arrow"
+            onClick={() => update({ collapsed: !collapsed })}
+            title={collapsed ? "Expand" : "Minimize"}
+          >
+            {collapsed ? "▸" : "▾"}
+          </button>
+        )}
         <input
           className="category-name"
           value={category.name}
@@ -98,6 +115,11 @@ export default function CategoryCard({
             />
             %
           </label>
+          {collapsed && (
+            <span className="card-collapsed-score">
+              {score === null ? "—" : `${score.toFixed(2)}%`}
+            </span>
+          )}
           {manageMode ? (
             <button type="button" className="add-btn manage-finish-btn" onClick={() => setManageMode(false)}>
               Finish
@@ -109,6 +131,10 @@ export default function CategoryCard({
                   label: category.isFinalExam ? "✓ This is the final exam" : "This is the final exam",
                   onClick: handleFinalExamClick,
                 },
+                {
+                  label: showLateDays ? "✓ Show late days column" : "Show late days column",
+                  onClick: () => update({ showLateDays: !showLateDays }),
+                },
                 { label: "Manage assignments", onClick: () => setManageMode(true) },
                 { label: "Delete this card", onClick: handleDeleteCardClick },
               ]}
@@ -117,6 +143,8 @@ export default function CategoryCard({
         </div>
       </div>
 
+      {collapsed ? null : (
+      <>
       <div className="card-options">
         <label>
           Averaging
@@ -144,7 +172,7 @@ export default function CategoryCard({
             <th>Earned</th>
             <th>Possible</th>
             <th>%</th>
-            <th title="Late days used on this assignment">Late days</th>
+            {showLateDays && <th title="Late days used on this assignment">Late days</th>}
             <th title="Check once this is your actual final grade for this assignment">Final?</th>
             {manageMode && <th></th>}
           </tr>
@@ -192,19 +220,21 @@ export default function CategoryCard({
                   />
                 </td>
                 <td className="pct-cell">{pct === "—" ? pct : `${pct}%`}</td>
-                <td>
-                  <input
-                    type="number"
-                    min="0"
-                    className="late-days-input"
-                    value={a.lateDaysUsed || 0}
-                    disabled={a.confirmed}
-                    title={a.confirmed ? "Uncheck Final? to edit" : undefined}
-                    onChange={(e) =>
-                      updateAssignment(a.id, { lateDaysUsed: Number(e.target.value) || 0 })
-                    }
-                  />
-                </td>
+                {showLateDays && (
+                  <td>
+                    <input
+                      type="number"
+                      min="0"
+                      className="late-days-input"
+                      value={a.lateDaysUsed || 0}
+                      disabled={a.confirmed}
+                      title={a.confirmed ? "Uncheck Final? to edit" : undefined}
+                      onChange={(e) =>
+                        updateAssignment(a.id, { lateDaysUsed: Number(e.target.value) || 0 })
+                      }
+                    />
+                  </td>
+                )}
                 <td className="confirmed-cell">
                   <input
                     type="checkbox"
@@ -240,6 +270,8 @@ export default function CategoryCard({
           <strong>{contribution === null ? "—" : `${contribution.toFixed(2)} pts`}</strong>
         </span>
       </div>
+      </>
+      )}
 
       {confirmDeleteOpen && (
         <ConfirmDeleteCategoryModal

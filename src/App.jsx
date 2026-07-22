@@ -576,6 +576,10 @@ export default function App() {
                   )}
                   <ThreeDotMenu
                     items={[
+                      {
+                        label: active.compactLayout ? "✓ Compact layout" : "Compact layout",
+                        onClick: () => updateActive({ compactLayout: !active.compactLayout }),
+                      },
                       { label: "Export as JSON backup", onClick: () => exportClassJsonData(active) },
                       { label: "Export as Excel", onClick: () => exportClassExcelData(active) },
                       {
@@ -601,42 +605,91 @@ export default function App() {
               )}
             </header>
 
-            <main className="main-grid">
-              <div className="categories-column">
-                {active.categories.map((cat) => {
-                  const row = overall.rows.find((r) => r.id === cat.id);
-                  const finalExamCategory = active.categories.find((c) => c.isFinalExam);
-                  return (
-                    <CategoryCard
-                      key={cat.id}
-                      category={cat}
-                      score={row?.score ?? null}
-                      contribution={row?.contribution ?? null}
-                      onChange={updateCategory}
-                      onDelete={() => deleteCategory(cat.id)}
-                      finalExamCategoryId={finalExamCategory?.id ?? null}
-                      finalExamCategoryName={finalExamCategory?.name ?? null}
-                    />
-                  );
-                })}
+            {active.compactLayout ? (
+              <main className="compact-page">
+                <div className="compact-top-strip">
+                  <SummaryPanel
+                    overall={overall}
+                    scale={active.scale}
+                    onScaleChange={(scale) => updateActive({ scale })}
+                    credits={active.credits}
+                    onCreditsChange={(credits) => updateActive({ credits })}
+                    compact
+                  />
+                  {/* Late days + Final exam calculator share the middle column,
+                      stacked, so the strip reads as 3 columns rather than
+                      spreading every card out into its own slot. */}
+                  {(settings.cardVisibility.lateDays !== false ||
+                    settings.cardVisibility.finalExam !== false) && (
+                    <div className="compact-top-strip-stack">
+                      {settings.cardVisibility.lateDays !== false && cardRenderers.lateDays()}
+                      {settings.cardVisibility.finalExam !== false && cardRenderers.finalExam()}
+                    </div>
+                  )}
+                  {settings.cardVisibility.classInfo !== false && cardRenderers.classInfo()}
+                </div>
+
+                <div className="compact-categories-grid">
+                  {active.categories.map((cat) => {
+                    const row = overall.rows.find((r) => r.id === cat.id);
+                    const finalExamCategory = active.categories.find((c) => c.isFinalExam);
+                    return (
+                      <CategoryCard
+                        key={cat.id}
+                        category={cat}
+                        score={row?.score ?? null}
+                        contribution={row?.contribution ?? null}
+                        onChange={updateCategory}
+                        onDelete={() => deleteCategory(cat.id)}
+                        finalExamCategoryId={finalExamCategory?.id ?? null}
+                        finalExamCategoryName={finalExamCategory?.name ?? null}
+                        compact
+                      />
+                    );
+                  })}
+                </div>
                 <button className="add-btn add-category-btn" onClick={addCategory}>
                   + Add category
                 </button>
-              </div>
+              </main>
+            ) : (
+              <main className="main-grid">
+                <div className="categories-column">
+                  {active.categories.map((cat) => {
+                    const row = overall.rows.find((r) => r.id === cat.id);
+                    const finalExamCategory = active.categories.find((c) => c.isFinalExam);
+                    return (
+                      <CategoryCard
+                        key={cat.id}
+                        category={cat}
+                        score={row?.score ?? null}
+                        contribution={row?.contribution ?? null}
+                        onChange={updateCategory}
+                        onDelete={() => deleteCategory(cat.id)}
+                        finalExamCategoryId={finalExamCategory?.id ?? null}
+                        finalExamCategoryName={finalExamCategory?.name ?? null}
+                      />
+                    );
+                  })}
+                  <button className="add-btn add-category-btn" onClick={addCategory}>
+                    + Add category
+                  </button>
+                </div>
 
-              <div className="summary-column">
-                <SummaryPanel
-                  overall={overall}
-                  scale={active.scale}
-                  onScaleChange={(scale) => updateActive({ scale })}
-                  credits={active.credits}
-                  onCreditsChange={(credits) => updateActive({ credits })}
-                />
-                {settings.cardOrder
-                  .filter((key) => settings.cardVisibility[key] !== false && cardRenderers[key])
-                  .map((key) => cardRenderers[key]())}
-              </div>
-            </main>
+                <div className="summary-column">
+                  <SummaryPanel
+                    overall={overall}
+                    scale={active.scale}
+                    onScaleChange={(scale) => updateActive({ scale })}
+                    credits={active.credits}
+                    onCreditsChange={(credits) => updateActive({ credits })}
+                  />
+                  {settings.cardOrder
+                    .filter((key) => settings.cardVisibility[key] !== false && cardRenderers[key])
+                    .map((key) => cardRenderers[key]())}
+                </div>
+              </main>
+            )}
           </>
         )}
       </div>
