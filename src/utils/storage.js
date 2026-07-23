@@ -42,6 +42,7 @@ export function migrateProfiles(profiles) {
     ...p,
     overviewNote: p.overviewNote ?? "",
     compactLayout: p.compactLayout ?? false,
+    calculatorMode: p.calculatorMode ?? false,
     categories: (p.categories || []).map((c) => ({
       ...c,
       collapsed: c.collapsed ?? false,
@@ -144,6 +145,7 @@ export function newClassProfile(name = "New Class", scale = DEFAULT_SCALE) {
     manualLetter: null,
     overviewNote: "", // free-text notes/ideas about the class, edited via the Overview page's Notes column popup
     compactLayout: false, // per-class: denser multi-column class page, toggled from the page's 3-dot menu
+    calculatorMode: false, // per-class: within compact layout, show just the Summary card as a formula
   };
 }
 

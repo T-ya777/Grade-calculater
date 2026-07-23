@@ -592,6 +592,25 @@ export default function App() {
                 </div>
               </div>
 
+              {active.compactLayout && (
+                <div className="compact-mode-toggle" role="group" aria-label="Class page view">
+                  <button
+                    type="button"
+                    className={!active.calculatorMode ? "active" : ""}
+                    onClick={() => updateActive({ calculatorMode: false })}
+                  >
+                    Compact
+                  </button>
+                  <button
+                    type="button"
+                    className={active.calculatorMode ? "active" : ""}
+                    onClick={() => updateActive({ calculatorMode: true })}
+                  >
+                    Calculator mode
+                  </button>
+                </div>
+              )}
+
               {hypotheticalCount > 0 && (
                 <div className="hypothetical-banner">
                   <span>
@@ -605,7 +624,11 @@ export default function App() {
               )}
             </header>
 
-            {active.compactLayout ? (
+            {active.compactLayout && active.calculatorMode ? (
+              <main className="calculator-page">
+                <SummaryPanel overall={overall} scale={active.scale} calculatorMode />
+              </main>
+            ) : active.compactLayout ? (
               <main className="compact-page">
                 <div className="compact-top-strip">
                   <SummaryPanel

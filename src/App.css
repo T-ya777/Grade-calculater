@@ -28,6 +28,31 @@ header {
   width: 100%;
 }
 
+/* Two-choice segmented switch under the class name, only shown in compact
+   layout: Compact (the grid view) vs. Calculator mode (just the formula). */
+.compact-mode-toggle {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px;
+  gap: 2px;
+  width: fit-content;
+}
+
+.compact-mode-toggle button {
+  border: none;
+  background: transparent;
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.compact-mode-toggle button.active {
+  background: var(--accent);
+  color: #fff;
+}
+
 .hypothetical-banner {
   display: flex;
   align-items: center;
@@ -224,6 +249,75 @@ header h1 {
   .compact-categories-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Calculator mode: nothing but the Summary card, centered, showing the
+   letter grade and the actual arithmetic behind it. */
+.calculator-page {
+  display: flex;
+  justify-content: center;
+}
+
+.calculator-page .summary-card {
+  width: 100%;
+  max-width: 560px;
+}
+
+.grade-formula {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.grade-formula-term {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.grade-formula-term-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.grade-formula-term-math {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.grade-formula-times {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.grade-formula-term-label {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+  text-align: center;
+  max-width: 90px;
+}
+
+.grade-formula-op {
+  font-size: 15px;
+  color: var(--muted);
+  align-self: center;
+}
+
+.grade-formula-result {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-h);
+  align-self: center;
 }
 
 .card {

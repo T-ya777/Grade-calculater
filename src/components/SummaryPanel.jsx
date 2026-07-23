@@ -10,10 +10,87 @@ function withAlpha(hex, alpha) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-export default function SummaryPanel({ overall, scale, onScaleChange, credits, onCreditsChange, compact }) {
+export default function SummaryPanel({
+  overall,
+  scale,
+  onScaleChange,
+  credits,
+  onCreditsChange,
+  compact,
+  calculatorMode,
+}) {
   const { currentGrade, rows, gradedWeightSum, totalWeight } = overall;
   const letter = letterForScore(currentGrade, scale);
   const gradeColor = colorForLetterGrade(letter);
+
+  // Calculator mode: just the letter grade plus the actual math behind it,
+  // written out as score × weight for each graded category — no editable
+  // breakdown table, no cutoff editor, nothing else on the page.
+  if (calculatorMode) {
+    const gradedRows = rows.filter((r) => r.score !== null);
+    return (
+      <div className="card summary-card calculator-mode">
+        <div className="summary-card-header">
+          <h2>Summary</h2>
+        </div>
+
+        <div className="summary-grade">
+          <div
+            className="letter-circle"
+            style={
+              gradeColor
+                ? { borderColor: gradeColor, background: withAlpha(gradeColor, 0.14) }
+                : undefined
+            }
+          >
+            <span className="letter-circle-letter" style={gradeColor ? { color: gradeColor } : undefined}>
+              {letter}
+            </span>
+            <span className="letter-circle-pct">
+              {currentGrade === null ? "—" : `${currentGrade.toFixed(1)}%`}
+            </span>
+          </div>
+        </div>
+
+        {gradedRows.length === 0 ? (
+          <p className="muted small">Enter some scores to see the formula.</p>
+        ) : (
+          <div className="grade-formula">
+            {gradedRows.map((r, i) => (
+              <div className="grade-formula-term" key={r.id}>
+                {i > 0 && <span className="grade-formula-op">+</span>}
+                <div className="grade-formula-term-inner">
+                  <div className="grade-formula-term-math">
+                    <span>{r.score.toFixed(1)}%</span>
+                    <span className="grade-formula-times">×</span>
+                    <span>{r.weight}%</span>
+                  </div>
+                  <div className="grade-formula-term-label">{r.name}</div>
+                </div>
+              </div>
+            ))}
+            <span className="grade-formula-op">=</span>
+            <div className="grade-formula-result">
+              {currentGrade === null ? "—" : `${currentGrade.toFixed(1)}%`}
+            </div>
+          </div>
+        )}
+
+        {gradedWeightSum > 0 && gradedRows.length < rows.length && (
+          <p className="muted small">
+            Only categories with a score entered are included — {gradedWeightSum.toFixed(1)}% of{" "}
+            {totalWeight.toFixed(1)}% total weight so far.
+          </p>
+        )}
+
+        {totalWeight !== 100 && (
+          <p className="warning">
+            Heads up: category weights add up to {totalWeight}%, not 100%.
+          </p>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="card summary-card">
