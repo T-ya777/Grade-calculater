@@ -67,7 +67,9 @@
 [data-theme="editorial"] .degree-progress-fill,
 [data-theme="editorial"] .hypothetical-banner,
 [data-theme="editorial"] .what-if-banner,
-[data-theme="editorial"] .semester-reorder-banner {
+[data-theme="editorial"] .semester-reorder-banner,
+[data-theme="editorial"] .compact-mode-toggle,
+[data-theme="editorial"] .compact-mode-toggle button {
   border-radius: 0 !important;
   box-shadow: none !important;
 }
@@ -185,6 +187,18 @@
 [data-theme="editorial"] .scale-table th {
   border-bottom: 2px solid var(--editorial-ink) !important;
   padding-bottom: 8px;
+}
+
+/* The compact layout's assignment table already has tight, hand-tuned
+   column widths (see .compact-categories-grid in App.css) sized for the
+   default theme's normal-case headers. This theme's uppercase + 0.08em
+   letter-spacing treatment makes "POSSIBLE"/"LATE"/"FINAL?" noticeably
+   wider, which was enough to overflow those columns and collide with the
+   next one. Dialing spacing/size back just for this combination keeps the
+   editorial look without breaking the compact grid's layout. */
+[data-theme="editorial"] .compact-categories-grid .assignments-table th {
+  letter-spacing: 0.01em;
+  font-size: 10px;
 }
 
 [data-theme="editorial"] .breakdown-table td,

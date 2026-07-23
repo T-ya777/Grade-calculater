@@ -168,20 +168,29 @@ export default function CategoryCard({
       <table className="assignments-table">
         <thead>
           <tr>
-            <th>Assignment</th>
-            <th>Earned</th>
-            <th>Possible</th>
-            <th>%</th>
-            {showLateDays && <th title="Late days used on this assignment">Late days</th>}
-            <th title="Check once this is your actual final grade for this assignment">Final?</th>
-            {manageMode && <th></th>}
+            <th className="col-assignment">Assignment</th>
+            <th className="col-earned">Earned</th>
+            <th className="col-possible">Possible</th>
+            <th className="col-pct">%</th>
+            {showLateDays && (
+              <th className="col-latedays" title="Late days used on this assignment">
+                Late
+              </th>
+            )}
+            <th className="col-final" title="Check once this is your actual final grade for this assignment">
+              Final?
+            </th>
+            {manageMode && <th className="col-manage"></th>}
           </tr>
         </thead>
         <tbody>
           {category.assignments.map((a) => {
+            // Compact mode drops the decimal — "100.0%" was wide enough to
+            // run into the Late days column right next to it in a narrow
+            // card; a whole-number "100%" buys back just enough room.
             const pct =
               a.earned !== "" && a.possible !== "" && Number(a.possible) > 0
-                ? ((Number(a.earned) / Number(a.possible)) * 100).toFixed(1)
+                ? ((Number(a.earned) / Number(a.possible)) * 100).toFixed(compact ? 0 : 1)
                 : "—";
             const hasScore = a.earned !== "" && a.possible !== "" && Number(a.possible) > 0;
             const isDropped = droppedIds.has(a.id);

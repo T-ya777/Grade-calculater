@@ -218,6 +218,44 @@ header h1 {
   padding: 4px 3px;
 }
 
+.compact-categories-grid .assignments-table th {
+  white-space: nowrap;
+}
+
+/* Assignment names were getting squeezed down to the same width as every
+   other column and overlapping "Earned" — give that column most of the
+   room. Late days gets the least: a used-late-days count is realistically
+   always a single digit, so it doesn't need nearly as much space as a
+   name. */
+.compact-categories-grid .col-assignment {
+  width: 38%;
+}
+
+.compact-categories-grid .col-earned,
+.compact-categories-grid .col-possible {
+  width: 15%;
+}
+
+.compact-categories-grid .col-pct {
+  width: 14%;
+}
+
+.compact-categories-grid .col-latedays {
+  width: 8%;
+}
+
+.compact-categories-grid .col-final {
+  width: 12%;
+}
+
+.compact-categories-grid .pct-cell {
+  padding-right: 8px;
+}
+
+.compact-categories-grid .col-manage {
+  width: 20px;
+}
+
 /* Underlined input "lines" instead of boxed fields — reads less busy when
    several dense cards are visible at once, and each input fills its whole
    column so nothing looks clipped or cramped. */
@@ -236,6 +274,22 @@ header h1 {
 .compact-categories-grid .assignments-table input:focus {
   outline: none;
   border-bottom: 1px solid var(--accent);
+}
+
+/* The Late days column is narrow on purpose (a used-late-days count is
+   realistically a single digit) — but the browser's default number-input
+   spin arrows don't shrink with the box, so in a ~20px-wide cell they were
+   eating the whole width and pushing the actual digit out of view
+   entirely. Dropping the spinner UI here fixes that; you can still type or
+   use arrow keys. */
+.compact-categories-grid .assignments-table input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.compact-categories-grid .assignments-table input[type="number"]::-webkit-outer-spin-button,
+.compact-categories-grid .assignments-table input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .compact-categories-grid .score-input {
