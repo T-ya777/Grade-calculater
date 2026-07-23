@@ -165,11 +165,23 @@ header h1 {
   }
 }
 
+/* 3 explicit columns, each just a flex stack — cards are pre-sorted into
+   columns in JS (utils/layout.js) so the next card always lands under
+   whichever column is currently shortest, instead of strict grid order
+   (which would leave columns 2 and 3 mostly empty whenever column 1 has
+   one very tall card, like a Homework category with a dozen assignments). */
 .compact-categories-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  display: flex;
+  align-items: flex-start;
   gap: 12px;
-  align-items: start;
+}
+
+.compact-categories-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
 }
 
 /* Denser cards: smaller fonts and tighter padding than the default layout,
@@ -247,20 +259,44 @@ header h1 {
 
 @media (max-width: 700px) {
   .compact-categories-grid {
-    grid-template-columns: 1fr;
+    flex-direction: column;
   }
 }
 
-/* Calculator mode: nothing but the Summary card, centered, showing the
-   letter grade and the actual arithmetic behind it. */
+/* Calculator mode: a long, thin Summary card up top — letter circle pinned
+   to the far left, the formula expanding into the rest of the width — with
+   the same category cards grid as compact layout underneath. */
 .calculator-page {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.calculator-page .summary-card {
-  width: 100%;
-  max-width: 560px;
+.summary-card.calculator-mode {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 14px 22px;
+}
+
+.summary-card.calculator-mode .letter-circle {
+  flex: none;
+}
+
+.calculator-mode-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.calculator-mode-body h2 {
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.calculator-mode .grade-formula {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
 }
 
 .grade-formula {

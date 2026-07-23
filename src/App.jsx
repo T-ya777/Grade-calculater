@@ -12,6 +12,7 @@ import SemesterPage from "./components/SemesterPage";
 import OverviewPage from "./components/OverviewPage";
 import ThreeDotMenu from "./components/ThreeDotMenu";
 import { computeOverall, countHypotheticalAssignments } from "./utils/grading";
+import { distributeIntoColumns } from "./utils/layout";
 import { exportExcelWorkbook } from "./utils/excelExport";
 import {
   loadProfiles,
@@ -431,6 +432,10 @@ export default function App() {
 
   const overall = active ? computeOverall(active.categories) : null;
   const hypotheticalCount = active ? countHypotheticalAssignments(active.categories) : 0;
+  // Compact layout's category grid: 3 columns, next card always goes under
+  // whichever column is currently shortest — see utils/layout.js for why
+  // this uses assignment counts instead of measuring real DOM heights.
+  const categoryColumns = active ? distributeIntoColumns(active.categories, 3) : [[], [], []];
 
   const cardRenderers = {
     lateDays: () => (
@@ -449,6 +454,38 @@ export default function App() {
     ),
     classInfo: () => <ClassInfoCard key="classInfo" classProfile={active} onChange={updateActive} />,
   };
+
+  // Shared by both compact-layout branches (regular and calculator mode) —
+  // renders the category cards grouped into categoryColumns (see above)
+  // instead of one flat list, so cards land in the shortest column rather
+  // than strictly left-to-right/top-to-bottom.
+  function renderCompactCategoriesGrid() {
+    return (
+      <div className="compact-categories-grid">
+        {categoryColumns.map((col, ci) => (
+          <div className="compact-categories-column" key={ci}>
+            {col.map((cat) => {
+              const row = overall.rows.find((r) => r.id === cat.id);
+              const finalExamCategory = active.categories.find((c) => c.isFinalExam);
+              return (
+                <CategoryCard
+                  key={cat.id}
+                  category={cat}
+                  score={row?.score ?? null}
+                  contribution={row?.contribution ?? null}
+                  onChange={updateCategory}
+                  onDelete={() => deleteCategory(cat.id)}
+                  finalExamCategoryId={finalExamCategory?.id ?? null}
+                  finalExamCategoryName={finalExamCategory?.name ?? null}
+                  compact
+                />
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="app-shell-outer">
@@ -627,6 +664,11 @@ export default function App() {
             {active.compactLayout && active.calculatorMode ? (
               <main className="calculator-page">
                 <SummaryPanel overall={overall} scale={active.scale} calculatorMode />
+
+                {renderCompactCategoriesGrid()}
+                <button className="add-btn add-category-btn" onClick={addCategory}>
+                  + Add category
+                </button>
               </main>
             ) : active.compactLayout ? (
               <main className="compact-page">
@@ -652,25 +694,7 @@ export default function App() {
                   {settings.cardVisibility.classInfo !== false && cardRenderers.classInfo()}
                 </div>
 
-                <div className="compact-categories-grid">
-                  {active.categories.map((cat) => {
-                    const row = overall.rows.find((r) => r.id === cat.id);
-                    const finalExamCategory = active.categories.find((c) => c.isFinalExam);
-                    return (
-                      <CategoryCard
-                        key={cat.id}
-                        category={cat}
-                        score={row?.score ?? null}
-                        contribution={row?.contribution ?? null}
-                        onChange={updateCategory}
-                        onDelete={() => deleteCategory(cat.id)}
-                        finalExamCategoryId={finalExamCategory?.id ?? null}
-                        finalExamCategoryName={finalExamCategory?.name ?? null}
-                        compact
-                      />
-                    );
-                  })}
-                </div>
+                {renderCompactCategoriesGrid()}
                 <button className="add-btn add-category-btn" onClick={addCategory}>
                   + Add category
                 </button>
