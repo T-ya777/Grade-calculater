@@ -115,7 +115,9 @@ function buildOverviewSheet(wb, profiles, semesters, settings) {
 
 const BLOCK_WIDTH = 4;
 const BLOCK_GAP = 1;
-const BLOCK_STRIDE = BLOCK_WIDTH + BLOCK_GAP;
+// Exported so excelImport.js can walk the same column layout in reverse
+// without the two files silently drifting out of sync.
+export const BLOCK_STRIDE = BLOCK_WIDTH + BLOCK_GAP;
 
 function buildClassSheet(wb, profile, usedNames) {
   const sheetName = sanitizeSheetName(profile.name, usedNames);

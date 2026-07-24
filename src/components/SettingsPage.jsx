@@ -17,6 +17,7 @@ export default function SettingsPage({
   onApplyScaleToClasses,
   onExportData,
   onImportData,
+  onImportExcel,
   onClearAllData,
   onExportExcel,
 }) {
@@ -395,14 +396,28 @@ export default function SettingsPage({
               }}
             />
           </label>
+          <label className="add-btn settings-import-label">
+            Import Excel
+            <input
+              type="file"
+              accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                if (file) onImportExcel(file);
+              }}
+            />
+          </label>
           <button className="add-btn danger" onClick={onClearAllData}>
             Clear all data
           </button>
         </div>
         <p className="muted small" style={{ marginTop: 8 }}>
-          "Export backup" is the file to import from — it's the only one that restores
-          everything exactly. "Export Excel" is a readable spreadsheet snapshot (an Overview
-          sheet plus one sheet per class) for viewing outside the app; it can't be imported yet.
+          "Export backup" is the file to import from for an exact restore — settings, themes, and
+          everything else round-trip through it. "Import Excel" only works on a file this app
+          exported itself (it re-reads the Overview + per-class sheets); it brings back
+          classes/categories/assignments/semesters, but not app settings like your default grade
+          scale.
         </p>
 
         {excelModalOpen && (

@@ -2162,6 +2162,35 @@ header h1 {
   margin: 10px 0;
 }
 
+.ai-import-modal {
+  max-width: 520px;
+}
+
+.ai-import-actions-row {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.ai-import-textarea {
+  width: 100%;
+  min-height: 180px;
+  resize: vertical;
+  font-family: ui-monospace, "SF Mono", Consolas, monospace;
+  font-size: 12px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: inherit;
+  margin-bottom: 8px;
+  box-sizing: border-box;
+}
+
+.ai-import-choice-actions {
+  flex-wrap: wrap;
+}
+
 .overview-note-btn {
   opacity: 0.5;
 }

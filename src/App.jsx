@@ -14,6 +14,8 @@ import ThreeDotMenu from "./components/ThreeDotMenu";
 import { computeOverall, countHypotheticalAssignments } from "./utils/grading";
 import { distributeIntoColumns } from "./utils/layout";
 import { exportExcelWorkbook } from "./utils/excelExport";
+import { parseExcelWorkbook } from "./utils/excelImport";
+import AiImportModal from "./components/AiImportModal";
 import {
   loadProfiles,
   saveProfiles,
@@ -42,6 +44,7 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [semesterView, setSemesterView] = useState(null);
   const [overviewOpen, setOverviewOpen] = useState(false);
+  const [aiImportOpen, setAiImportOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     try {
@@ -335,6 +338,40 @@ export default function App() {
     reader.readAsText(file);
   }
 
+  // Excel import only works on a file this app exported itself (it re-reads
+  // the Overview + per-class sheets built by exportExcelWorkbook) — it's a
+  // round-trip tool, not a general Excel importer. Also replaces everything,
+  // same as the JSON backup import, but settings (default scale, GPA point
+  // table, theme, etc.) aren't touched since Excel never carries those.
+  async function importExcelAllData(file) {
+    let result;
+    try {
+      result = await parseExcelWorkbook(file);
+    } catch (e) {
+      alert(e.message);
+      return;
+    }
+
+    const count = result.profiles.length;
+    const proceed = window.confirm(
+      `This will replace everything currently in the app with this Excel file ` +
+        `(${count} class${count === 1 ? "" : "es"}). App settings (default scale, GPA points, ` +
+        `theme) won't change — Excel doesn't carry those. This can't be undone. Continue?`
+    );
+    if (!proceed) return;
+
+    setProfiles(migrateProfiles(result.profiles));
+    setSemesters(result.semesters);
+    setActiveId(result.profiles[0]?.id ?? null);
+    setSettingsOpen(false);
+    setSemesterView(null);
+    setOverviewOpen(false);
+
+    if (result.warnings.length > 0) {
+      alert(`Imported with some issues:\n\n${result.warnings.join("\n")}`);
+    }
+  }
+
   // Secondary export, alongside the JSON backup — a human-readable/editable
   // spreadsheet snapshot (Overview + one sheet per class). Excel-only for
   // now; importing it back in is a separate, not-yet-built step.
@@ -382,6 +419,31 @@ export default function App() {
     if (!proceed) return;
     const [migratedImport] = migrateProfiles([imported]);
     setProfiles((prev) => prev.map((p) => (p.id === id ? { ...migratedImport, id } : p)));
+  }
+
+  // AI-generated JSON import (see AiImportModal + utils/aiImport.js) — the
+  // schema has no id/scale/semester baked in the way a real backup does, so
+  // "overwrite" keeps the current class's id/scale/semester and only swaps
+  // in the parsed name/credits/categories; "new" just adds it as a fresh
+  // class (no semester assigned yet, same as creating one from scratch).
+  function handleAiImport(parsedProfile, mode) {
+    const [migrated] = migrateProfiles([parsedProfile]);
+    if (mode === "overwrite" && active) {
+      setProfiles((prev) =>
+        prev.map((p) =>
+          p.id === active.id
+            ? { ...migrated, id: active.id, scale: p.scale, semester: p.semester, isManual: false }
+            : p
+        )
+      );
+    } else {
+      setProfiles((prev) => [...prev, migrated]);
+      setActiveId(migrated.id);
+      setSettingsOpen(false);
+      setSemesterView(null);
+      setOverviewOpen(false);
+    }
+    setAiImportOpen(false);
   }
 
   // Semester export, from the three-dot menu on the semester page — export
@@ -547,6 +609,7 @@ export default function App() {
                 onApplyScaleToClasses={applyScaleToClasses}
                 onExportData={exportAllData}
                 onImportData={importAllData}
+                onImportExcel={importExcelAllData}
                 onClearAllData={clearAllData}
                 onExportExcel={exportExcelData}
               />
@@ -624,10 +687,22 @@ export default function App() {
                         fileAccept: ".json,application/json",
                         onFile: (file) => importClassJsonData(active.id, file),
                       },
+                      {
+                        label: "Import from AI-generated JSON...",
+                        onClick: () => setAiImportOpen(true),
+                      },
                     ]}
                   />
                 </div>
               </div>
+
+              {aiImportOpen && (
+                <AiImportModal
+                  currentClassName={active.name}
+                  onClose={() => setAiImportOpen(false)}
+                  onImport={handleAiImport}
+                />
+              )}
 
               {active.compactLayout && (
                 <div className="compact-mode-toggle" role="group" aria-label="Class page view">
